@@ -24,6 +24,6 @@ class Candidate extends Model
     // Definisikan relasi satu ke satu  
     public function candidatepict()
     {
-        return $this->hasOne(CandidatePict::class, 'employee_id');
+        return $this->hasOne(CandidatePict::class, 'candidate_id');
     }
 }

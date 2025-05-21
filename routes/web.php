@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CandidateController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Auth;
@@ -29,4 +30,11 @@ Route::middleware(['auth'])->group(function () {
 
     // Define a GET route with dynamic placeholders for route parameters
     Route::get('{routeName}/{name?}', [HomeController::class, 'pageView']);
+
+    // candidate routes
+    Route::get('pics/AddCandidate', [CandidateController::class, 'candidate'])->name('candidate');
+    Route::post('/candidate/store', [CandidateController::class, 'storecandidate'])->name('candidate.store');
+    Route::get('/candidate/edit/{id}', [CandidateController::class, 'editcandidate'])->name('candidate.edit');
+    Route::post('/candidate/update/{id}', [CandidateController::class, 'updatecandidate'])->name('candidate.update');
+    Route::get('/candidate/delete/{id}', [CandidateController::class, 'deletecandidate'])->name('candidate.delete');
 });

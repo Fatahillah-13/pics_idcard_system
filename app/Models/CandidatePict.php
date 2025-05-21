@@ -14,7 +14,7 @@ class CandidatePict extends Model
 
     // Kolom-kolom yang dapat diisi secara massal
     protected $fillable = [
-        'employee_id',
+        'candidate_id',
         'pict_number',
         'pict_name',
     ];
@@ -22,6 +22,6 @@ class CandidatePict extends Model
     // Definisikan relasi banyak ke satu  
     public function candidate()
     {
-        return $this->belongsTo(Candidate::class, 'employee_id');
+        return $this->belongsTo(Candidate::class, 'candidate_id');
     }
 }
