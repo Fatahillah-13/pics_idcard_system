@@ -8,15 +8,6 @@ use App\Models\CandidatePict;
 
 class CandidateController extends Controller
 {
-    public function candidate(){
-        // Get latest pict_number from the database
-        $latestPict = CandidatePict::orderBy('pict_number', 'desc')->first();
-
-        // Pass to the view
-        return view('pics.AddCandidate', [
-            'latestPict' => $latestPict,
-        ]);
-    }
 
     public function storecandidate(Request $request)
     {

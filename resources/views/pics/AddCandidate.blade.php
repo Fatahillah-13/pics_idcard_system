@@ -43,39 +43,41 @@
                                 </div>
                             </div> --}}
                             <div class="mb-3 col-md-6">
-                                <label class="form-label" for="inputEmail4">Nama Lengkap</label>
+                                <label class="form-label" for="inputName">Nama Lengkap</label>
                                 <input type="text" class="form-control" name="inputName" id="inputName"
                                     placeholder="Nama Lengkap" required />
                             </div>
                             <div class="mb-3 col-md-6">
                                 <label class="form-label" for="inputBirthPlace">Tempat Lahir</label>
                                 <input type="text" class="form-control" name="inputBirthPlace" id="inputBirthPlace"
-                                    placeholder="Tempat Lahir" required/>
+                                    placeholder="Tempat Lahir" required />
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label" for="inputAddress">Level Karyawan</label>
+                            <label class="form-label" for="inputJobLevel">Level Karyawan</label>
                             <input type="text" class="form-control" name="inputJobLevel" id="inputJobLevel"
-                                placeholder="Level Karyawan" required/>
+                                placeholder="Level Karyawan" required />
                         </div>
                         <div class="mb-3">
-                            <label class="form-label" for="inputAddress2">Departemen</label>
+                            <label class="form-label" for="inputDepartment">Departemen</label>
                             <input type="text" class="form-control" name="inputDepartment" id="inputDepartment"
-                                placeholder="Departemen" required/>
+                                placeholder="Departemen" required />
                         </div>
                         <div class="row">
                             <div class="mb-3 col-md-5">
                                 <label class="form-label" for="inputBirthDate">Tanggal Lahir</label>
-                                <input type="date" class="form-control" name="inputBirthDate" id="inputBirthDate" required/>
+                                <input type="date" class="form-control" name="inputBirthDate" id="inputBirthDate"
+                                    required />
                             </div>
                             <div class="mb-3 col-md-5">
                                 <label class="form-label" for="inputFirstWorkDay">Tanggal Masuk</label>
-                                <input type="date" class="form-control" name="inputFirstWorkDay"
-                                    id="inputFirstWorkDay" required />
+                                <input type="date" class="form-control" name="inputFirstWorkDay" id="inputFirstWorkDay"
+                                    required />
                             </div>
                             <div class="mb-3 col-md-2">
-                                <label class="form-label" for="inputZip">No. Foto</label>
-                                <input type="number" class="form-control" name="inputPictNumber" id="inputPictNumber"/>
+                                <label class="form-label" for="inputPictNumber">No. Foto</label>
+                                <input type="number" class="form-control" name="inputPictNumber" id="inputPictNumber"
+                                    value="{{ $nextPictNumber }}" />
                             </div>
                         </div>
                         <button type="submit" class="btn btn-primary">+ Tambahkan Kandidat</button>
