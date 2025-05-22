@@ -48,13 +48,47 @@ class CandidateController extends Controller
 
     public function editcandidate($id)
     {
-        // Logic to edit candidate data
-        return view('edit-candidate', compact('id'));
+        return Candidate::with('candidatepict')->findOrFail($id);
+        return response()->json($candidates);
     }
 
     public function updatecandidate(Request $request, $id)
     {
         // Logic to update candidate data
+        $request->validate([
+            'inputName' => 'required|string|max:255',
+            'inputBirthPlace' => 'required|string|max:255',
+            'inputJobLevel' => 'required|string|max:255',
+            'inputDepartment' => 'required|string|max:255',
+            'inputBirthDate' => 'required|date',
+            'inputFirstWorkDay' => 'required|date',
+            // Add other validation rules as needed
+        ]);
+        $id = $request->route('id');
+
+        // Find the candidate by ID and update the data
+        $candidate = Candidate::findOrFail($id);
+        $candidate->name = $request->inputName;
+        $candidate->birthplace = $request->inputBirthPlace;
+        $candidate->job_level = $request->inputJobLevel;
+        $candidate->department = $request->inputDepartment;
+        $candidate->birthdate = $request->inputBirthDate;
+        $candidate->first_working_day = $request->inputFirstWorkDay;
+        // Add other fields to update as needed
+        $candidate->save();
+        // If pict number is provided, update it in the database
+        if ($request->has('inputPictNumber')) {
+            $candidatePict = CandidatePict::where('candidate_id', $id)->first();
+            if ($candidatePict) {
+                $candidatePict->pict_number = $request->inputPictNumber;
+                $candidatePict->save();
+            }
+        }
+        // If pict is provided, update it with updatecandidatepict function
+        if ($request->has('inputPict')) {
+            // pass the request to updatecandidatepict function
+            $this->updatecandidatepict($request);
+        }
         return redirect()->route('candidate')->with('success', 'Candidate updated successfully.');
     }
 
@@ -62,5 +96,13 @@ class CandidateController extends Controller
     {
         // Logic to delete candidate data
         return redirect()->route('candidate')->with('success', 'Candidate deleted successfully.');
+    }
+
+    public function updatecandidatepict(Request $request)
+    {
+        // Logic to store candidate picture
+
+        // Redirect back to the candidate page with a success message
+        return redirect('/pics/AddCandidate')->with('success', 'Candidate picture added successfully.');
     }
 }

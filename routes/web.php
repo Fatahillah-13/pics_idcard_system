@@ -28,12 +28,16 @@ Route::middleware(['auth'])->group(function () {
         return view('index');
     });
 
+    // Choices routes
+    Route::get('/choices', [HomeController::class, 'candidatechoices']);
+
+
     // Define a GET route with dynamic placeholders for route parameters
     Route::get('{routeName}/{name?}', [HomeController::class, 'pageView'])->name('home.dynamic.view');
 
-
     // candidate routes
     Route::post('/candidate/store', [CandidateController::class, 'storecandidate'])->name('candidate.store');
+    Route::post('/candidate/storepict', [CandidateController::class, 'storecandidatepict'])->name('candidate.storepict');
     Route::get('/candidate/edit/{id}', [CandidateController::class, 'editcandidate'])->name('candidate.edit');
     Route::post('/candidate/update/{id}', [CandidateController::class, 'updatecandidate'])->name('candidate.update');
     Route::get('/candidate/delete/{id}', [CandidateController::class, 'deletecandidate'])->name('candidate.delete');

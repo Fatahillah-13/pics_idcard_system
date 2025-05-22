@@ -21,7 +21,7 @@
     <ul class="pc-submenu">
         <li class="pc-item"><a class="pc-link" href="/pics/AddCandidate" data-i18n="Tambah Kandidat">Tambah
                 Kandidat</a></li>
-        <li class="pc-item"><a class="pc-link" href="/demo/layout-vertical" data-i18n="Ambil Foto">Ambil Foto</a></li>
+        <li class="pc-item"><a class="pc-link" href="/pics/TakePict" data-i18n="Ambil Foto">Ambil Foto</a></li>
         <li class="pc-item"><a class="pc-link" href="/demo/layout-vertical-tab" data-i18n="Tambah NIK + Cetak">Tambah
                 NIK + Cetak</a></li>
     </ul>
