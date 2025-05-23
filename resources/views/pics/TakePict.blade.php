@@ -28,6 +28,16 @@
                     </div>
                 </div>
                 <div class="card-body">
+                    <div class="col-xl-12" id="myDiv">
+                        <div id="my_camera" class="">
+                            <img src="{{ asset('assets/img/picture_icon2.png') }}" alt="picture" srcset=""
+                                height="300px" width="400px">
+                        </div>
+                        <div class="mt-2 col-xl-12" id="buttonShutter" style="display: none;">
+                            <button type="button" class="btn btn-secondary d-inline-flex"><i
+                                    class="ti ti-camera me-1"></i>Ambil Gambar</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -125,102 +135,38 @@
 
             });
     </script>
-
     <script>
-        data_uri_update = "";
-        // Configure the webcam
+        // Configure a few settings and attach camera
         Webcam.set({
-            width: 320,
-            height: 240,
+            width: 500,
+            height: 300,
+            dest_width: 500,
+            fps: 60,
             image_format: 'jpeg',
             jpeg_quality: 90
         });
 
+
+        // A function to handle the snapshot and display it in the preview div
         function take_snapshot() {
-            Webcam.snap(function(data_uri_update) {
-                // Show the preview
-                document.getElementById('preview_edit').src = data_uri_update;
-                document.getElementById('preview_edit').style.display = 'block';
-                document.getElementById('preview_edit').innerHTML = '<img src="' + data_uri_update + '"/>';
-                // Simpan data URI ke dalam input hidden
-                document.getElementById('imagePath_edit').value =
-                    data_uri_update; // Menyimpan data URI ke input hidden
+            Webcam.snap(function(data_uri) {
+                document.getElementById('my_camera').innerHTML = '<img src="' + data_uri + '"/>';
             });
         }
 
-        $(document).ready(function() {
-
-            const checkbox = document.getElementById('myCheckbox');
-            const myDiv = document.getElementById('myDiv');
-            const shuterBtn = document.getElementById('captureBtn');
-
-            checkbox.addEventListener('change', function() {
-                if (this.checked) {
-                    myDiv.classList.remove('hidden');
-                    shuterBtn.classList.remove('hidden');
-                    // Attach the webcam to the div
-                    Webcam.attach('#my_camera');
-                } else {
-                    myDiv.classList.add('hidden');
-                    shuterBtn.classList.add('hidden');
-                    Webcam.reset('#my_camera');
-                }
-            });
-
-            // Update form submit
-            $('#updateCandidate').on('submit', function(e) {
-                e.preventDefault();
-                var id = $('#candidateIdDisplay').val();
-                var imageData_update = $('#imagePath_edit').val();
-                // Buat payload JSON
-                var payload_update = {
-                    id: id,
-                    name: $('#nama_edit').val(),
-                    job_level: $('#level_edit').val(),
-                    department: $('#workplace_edit').val(),
-                    birthplace: $('#tempat_lahir_edit').val(),
-                    birthdate: $('#tgl_lahir_edit').val(),
-                    first_work_day: $('#tgl_masuk_edit').val(),
-                    pict_number: $('#no_foto_edit').val(),
-                    foto: imageData_update
-                };
-                // console.log(payload_update);
-                $.ajax({
-                    url: '/api/karyawan/update/' + id,
-                    type: 'POST',
-                    // type: 'application/json',
-                    data: payload_update,
-                    success: function(response) {
-                        // console.log(response);
-                        var calon_option = ``;
-                        for (let kl = 0; kl < response.length; kl++) {
-                            calon_option += `<option value="` + response[kl].id + `"> Nama : ` +
-                                response[kl].nama + ` | TEMPAT LAHIR : ` + response[kl]
-                                .tempat_lahir + ` | TGL LAHIR : ` + response[kl].tgl_lahir +
-                                `</option>`;
-                        }
-                        document.getElementById('nama_edit2').innerHTML = calon_option;
-                        document.getElementById('my_camera_edit').style.display = "none";
-                        Webcam.reset('#my_camera_edit');
-                        document.getElementById('myCheckbox_edit').checked = false;
-                        toastr.success('Data berhasil diperbarui.');
-                    },
-                    error: function(xhr, status, error) {
-                        var errors = xhr.responseJSON.errors;
-                        if (errors) {
-                            $.each(errors, function(key, value) {
-                                alert(value[0]);
-                            });
-                        } else {
-                            toastr.error('An error occurred. Please try again.');
-                        }
-                    }
-                });
-
-            });
+        // Add event listener to the checkbox
+        document.getElementById('customCheckinl1').addEventListener('change', function() {
+            if (this.checked) {
+                Webcam.attach('#my_camera');
+                // unhide the shutter button
+                document.getElementById('buttonShutter').style.display = 'block';
+            } else {
+                Webcam.reset();
+                document.getElementById('my_camera').innerHTML =
+                    '<img src="{{ asset('assets/img/picture_icon2.png') }}" alt="picture" srcset="" height="300px" width="400px">';
+                // unhide the shutter button
+                document.getElementById('buttonShutter').style.display = 'none';
+            }
         });
     </script>
-
-
-
 @endsection
