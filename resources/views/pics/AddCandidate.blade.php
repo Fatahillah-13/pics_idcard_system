@@ -60,8 +60,9 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label" for="inputDepartment">Departemen</label>
-                            <input type="text" class="form-control" name="inputDepartment" id="inputDepartment"
-                                placeholder="Departemen" required />
+                            <select class="form-control" name="inputDepartment" id="inputDepartment">
+                                <option value="">Pilih Departemen</option>
+                            </select>
                         </div>
                         <div class="row">
                             <div class="mb-3 col-md-5">
@@ -88,4 +89,29 @@
         <!-- [ sample-page ] end -->
     </div>
     <!-- [ Main Content ] end -->
+@endsection
+
+@section('scripts')
+    <script src="{{ URL::asset('build/js/plugins/choices.min.js') }}"></script>
+    <script>
+        const inputDepartment = document.getElementById('inputDepartment');
+
+        const departmentChoices = new Choices(inputDepartment, {
+            searchPlaceholderValue: 'Cari Departemen',
+            shouldSort: false,
+        });
+
+        departmentChoices
+            .setChoices(() =>
+                fetch('/department/choices')
+                .then(response => response.json())
+            )
+            .then(() => {
+                document.getElementById('inputDepartment').addEventListener('change', function() {
+                    const selectedChoice = departmentChoices.getValue(); // single object
+                    console.log(selectedChoice);
+                });
+
+            });
+    </script>
 @endsection

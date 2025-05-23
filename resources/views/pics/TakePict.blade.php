@@ -110,6 +110,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/webcamjs/1.0.26/webcam.min.js"></script>
     <script>
         const candidateIdDisplay = document.getElementById('candidateIdDisplay');
+        const candidateBirthplaceDisplay = document.getElementById('inputBirthPlace');
+        const candidateBirthdateDisplay = document.getElementById('inputBirthDate');
+        const candidateFirstWorkDayDisplay = document.getElementById('inputFirstWorkDay');
+        const candidatePictNumberDisplay = document.getElementById('inputPictNumber');
         const inputName = document.getElementById('inputName');
 
         const candidateChoices = new Choices(inputName, {
@@ -119,15 +123,21 @@
 
         candidateChoices
             .setChoices(() =>
-                fetch('/choices')
+                fetch('/candidate/choices')
                 .then(response => response.json())
             )
             .then(() => {
                 document.getElementById('inputName').addEventListener('change', function() {
                     const selectedChoice = candidateChoices.getValue(); // single object
+                    console.log(selectedChoice);
+
 
                     if (selectedChoice && selectedChoice.customProperties) {
                         candidateIdDisplay.value = selectedChoice.customProperties.candidateID;
+                        candidateBirthplaceDisplay.value = selectedChoice.customProperties.birthplace;
+                        candidateBirthdateDisplay.value = selectedChoice.customProperties.birthdate;
+                        candidateFirstWorkDayDisplay.value = selectedChoice.customProperties.first_working_day;
+                        candidatePictNumberDisplay.value = selectedChoice.customProperties.pict_number;
                     } else {
                         candidateIdDisplay.value = '';
                     }

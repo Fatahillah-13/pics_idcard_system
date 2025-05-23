@@ -6,6 +6,8 @@ use App\Models\Candidate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\View;
 use App\Models\CandidatePict;
+use App\Models\Department;
+use App\Models\JobLevel;
 
 class HomeController extends Controller
 {
@@ -36,15 +38,43 @@ class HomeController extends Controller
     public function candidatechoices(Request $request)
     {
         // Logic to handle candidate choices
-        $candidates = Candidate::all(); // Fetch all candidates from the database
+        $candidates = Candidate::with('candidatepict')->get(); // Fetch all candidates from the database
 
         return response()->json($candidates->map(function ($candidates) {
             return [
                 'label' => $candidates->name,
                 'value' => $candidates->name,
                 'customProperties' => [
-                    'candidateID' => $candidates->id
+                    'candidateID' => $candidates->id,
+                    'birthplace' => $candidates->birthplace,
+                    'birthdate' => $candidates->birthdate,
+                    'first_working_day' => $candidates->first_working_day,
+                    'pict_number' => $candidates->candidatepict ? $candidates->candidatepict->pict_number : null,
                 ]
+            ];
+        }));
+    }
+
+    public function departmentChoices(Request $request){
+        // Logic to handle department choices
+        $departments = Department::all();
+
+        return response()->json($departments->map(function ($department){
+            return [
+                'label' => $department->department_name,
+                'value' => $department->department_name,
+            ];
+        }));
+    }
+
+    public function jobLevelChoices(Request $request){
+        // Logic to handle department choices
+        $joblevels = JobLevel::all();
+
+        return response()->json($joblevels->map(function ($joblevel){
+            return [
+                'label' => $joblevel->level_name,
+                'value' => $joblevel->level_name,
             ];
         }));
     }

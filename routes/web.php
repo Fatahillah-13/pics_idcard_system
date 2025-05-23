@@ -29,7 +29,9 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Choices routes
-    Route::get('/choices', [HomeController::class, 'candidatechoices']);
+    Route::get('/candidate/choices', [HomeController::class, 'candidatechoices']);
+    Route::get('/department/choices', [HomeController::class, 'departmentChoices']);
+    Route::get('/joblevel/choices', [HomeController::class, 'jobLevelChoices']);
 
 
     // Define a GET route with dynamic placeholders for route parameters
