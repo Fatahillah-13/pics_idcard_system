@@ -55,8 +55,9 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label" for="inputJobLevel">Level Karyawan</label>
-                            <input type="text" class="form-control" name="inputJobLevel" id="inputJobLevel"
-                                placeholder="Level Karyawan" required />
+                            <select class="form-control" name="inputJobLevel" id="inputJobLevel">
+                                <option value="">Pilih Level Karyawan</option>
+                            </select>
                         </div>
                         <div class="mb-3">
                             <label class="form-label" for="inputDepartment">Departemen</label>
@@ -108,6 +109,27 @@
             )
             .then(() => {
                 document.getElementById('inputDepartment').addEventListener('change', function() {
+                    const selectedChoice = departmentChoices.getValue(); // single object
+                    console.log(selectedChoice);
+                });
+
+            });
+    </script>
+    <script>
+        const inputJobLevel = document.getElementById('inputJobLevel');
+
+        const jobLevelChoices = new Choices(inputJobLevel, {
+            searchPlaceholderValue: 'Cari Level Karyawan',
+            shouldSort: false,
+        });
+
+        jobLevelChoices
+            .setChoices(() =>
+                fetch('/joblevel/choices')
+                .then(response => response.json())
+            )
+            .then(() => {
+                document.getElementById('inputJobLevel').addEventListener('change', function() {
                     const selectedChoice = departmentChoices.getValue(); // single object
                     console.log(selectedChoice);
                 });

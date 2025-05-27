@@ -1,4 +1,7 @@
 <!-- Required Js -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+{{-- <script src="{{ URL::asset('build/js/plugins/jquery.min.js') }}"></script> --}}
 <script src="{{ URL::asset('build/js/plugins/popper.min.js') }}"></script>
 <script src="{{ URL::asset('build/js/plugins/simplebar.min.js') }}"></script>
 <script src="{{ URL::asset('build/js/plugins/bootstrap.min.js') }}"></script>

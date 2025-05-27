@@ -11,28 +11,39 @@ use App\Models\JobLevel;
 
 class HomeController extends Controller
 {
-    public function pageView($routeName, $page = null, $data = [])
-    {
-        // Construct the view name based on the provided routeName and optional page parameter
-        $viewName = ($page) ? $routeName . '.' . $page : $routeName;
+    // public function pageView($routeName, $page = null, $data = [])
+    // {
+    //     // Construct the view name based on the provided routeName and optional page parameter
+    //     $viewName = ($page) ? $routeName . '.' . $page : $routeName;
 
-        // Inject special logic for a AddCandidate view
-        if ($viewName === 'pics.AddCandidate') {
-            $latestPict = CandidatePict::orderBy('pict_number', 'desc')->first();
-            $nextPictNumber = $latestPict ? $latestPict->pict_number + 1 : 1;
+    //     // Inject special logic for a AddCandidate view
+    //     if ($viewName === 'pics.AddCandidate') {
+    //         $latestPict = CandidatePict::orderBy('pict_number', 'desc')->first();
+    //         $nextPictNumber = $latestPict ? $latestPict->pict_number + 1 : 1;
 
-            $data['latestPict'] = $latestPict;
-            $data['nextPictNumber'] = $nextPictNumber;
-        }
+    //         $data['latestPict'] = $latestPict;
+    //         $data['nextPictNumber'] = $nextPictNumber;
+    //     }
 
-        // Check if the constructed view exists
-        if (View::exists($viewName)) {
-            // If the view exists, return the view
-            return view($viewName, $data);
-        } else {
-            // If the view doesn't exist, return a 404 error
-            abort(404);
-        }
+    //     // Check if the constructed view exists
+    //     if (View::exists($viewName)) {
+    //         // If the view exists, return the view
+    //         return view($viewName, $data);
+    //     } else {
+    //         // If the view doesn't exist, return a 404 error
+    //         abort(404);
+    //     }
+    // }
+
+    public function pictNumber(){
+        // Logic to get the latest pict number
+        $latestPict = CandidatePict::orderBy('pict_number', 'desc')->first();
+        $nextPictNumber = $latestPict ? $latestPict->pict_number + 1 : 1;
+
+        return view('pics.AddCandidate', [
+            'nextPictNumber' => $nextPictNumber,
+            'latestPict' => $latestPict,
+        ]);
     }
 
     public function candidatechoices(Request $request)
@@ -49,6 +60,8 @@ class HomeController extends Controller
                     'birthplace' => $candidates->birthplace,
                     'birthdate' => $candidates->birthdate,
                     'first_working_day' => $candidates->first_working_day,
+                    'job_level' => $candidates->job_level,
+                    'department' => $candidates->department,
                     'pict_number' => $candidates->candidatepict ? $candidates->candidatepict->pict_number : null,
                 ]
             ];

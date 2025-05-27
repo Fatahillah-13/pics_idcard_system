@@ -43,7 +43,7 @@ class CandidateController extends Controller
         }
 
         // Redirect back to the candidate page with a success message
-        return redirect('/pics/AddCandidate')->with('success', 'Candidate added successfully.');
+        return redirect('/candidate/store')->with('success', 'Candidate added successfully.');
     }
 
     public function editcandidate($id)
@@ -52,44 +52,56 @@ class CandidateController extends Controller
         return response()->json($candidates);
     }
 
+
+    public function updatecandidatecoba1()
+    {
+        return response()->json(['message' => 'Update candidate coba 1 functionality is not implemented yet.']);
+    }
+    public function updatecandidatecoba(Request $request)
+    {
+        return response()->json(['message' => $request]);
+    }
+
     public function updatecandidate(Request $request, $id)
     {
+
         // Logic to update candidate data
         $request->validate([
-            'inputName' => 'required|string|max:255',
-            'inputBirthPlace' => 'required|string|max:255',
-            'inputJobLevel' => 'required|string|max:255',
-            'inputDepartment' => 'required|string|max:255',
-            'inputBirthDate' => 'required|date',
-            'inputFirstWorkDay' => 'required|date',
+            'name' => 'nullable|string|max:255',
+            'birthPlace' => 'nullable|string|max:255',
+            'birthDate' => 'nullable|date',
+            'jobLevel' => 'nullable|string|max:255',
+            'department' => 'nullable|string|max:255',
+            'firstWorkDay' => 'nullable|date',
             // Add other validation rules as needed
         ]);
-        $id = $request->route('id');
-
         // Find the candidate by ID and update the data
         $candidate = Candidate::findOrFail($id);
-        $candidate->name = $request->inputName;
-        $candidate->birthplace = $request->inputBirthPlace;
-        $candidate->job_level = $request->inputJobLevel;
-        $candidate->department = $request->inputDepartment;
-        $candidate->birthdate = $request->inputBirthDate;
-        $candidate->first_working_day = $request->inputFirstWorkDay;
-        // Add other fields to update as needed
-        $candidate->save();
+        $candidate->update([
+            'name' => $request->name,
+            'birthplace' => $request->birthPlace,
+            'birthdate' => $request->birthDate,
+            'job_level' => $request->jobLevel,
+            'department' => $request->department,
+            'first_working_day' => $request->firstWorkDay,
+        ]);
+
         // If pict number is provided, update it in the database
-        if ($request->has('inputPictNumber')) {
-            $candidatePict = CandidatePict::where('candidate_id', $id)->first();
-            if ($candidatePict) {
-                $candidatePict->pict_number = $request->inputPictNumber;
-                $candidatePict->save();
-            }
+        $pictNumber = $request->pictNumber;
+        if ($pictNumber) {
+            CandidatePict::where('candidate_id', $id)
+                ->update(['pict_number' => $pictNumber]);
         }
+
+        
         // If pict is provided, update it with updatecandidatepict function
-        if ($request->has('inputPict')) {
+        $imagepath = $request->imagePath;
+        if ($imagepath) {
             // pass the request to updatecandidatepict function
-            $this->updatecandidatepict($request);
+            $this->updatecandidatepict($request, $id);
         }
-        return redirect()->route('candidate')->with('success', 'Candidate updated successfully.');
+        // Redirect back to the candidate page with a success message
+        return redirect('/candidate/takephoto')->with('success', 'Candidate updated successfully.');
     }
 
     public function deletecandidate($id)
@@ -98,11 +110,48 @@ class CandidateController extends Controller
         return redirect()->route('candidate')->with('success', 'Candidate deleted successfully.');
     }
 
-    public function updatecandidatepict(Request $request)
+    public function updatecandidatepict(Request $request, $id)
     {
         // Logic to store candidate picture
+        $dataUri = $request->input('imagePath'); // Mengambil data URI dari input
+        // Memisahkan metadata dari data URI
+        if (preg_match('/^data:image\/(\w+);base64,/', $dataUri, $type)) {
+            $dataUri = substr($dataUri, strpos($dataUri, ',') + 1);
+            $type = strtolower($type[1]); // Mengambil tipe gambar (jpeg, png, dll)                
+            // Decode base64
+            $data = base64_decode($dataUri, true);
+            if ($data === false) {
+                return response()->json(['message' => 'Gagal mendekode gambar.'], 400);
+            } else {
+                // Membuat nama file yang unik
+                $filename = 'pic_' . time() . '.' . $type; // Menggunakan timestamp sebagai nama file
+                $filePath = public_path('storage/' . $filename); // Path untuk menyimpan file
+                // Menyimpan gambar ke public/storage
+                if (file_put_contents($filePath, $data) === false) {
+                    return response()->json(['message' => 'Gagal menyimpan gambar.'], 500);
+                }
+                $get_foto = CandidatePict::where('candidate_id', '=', $request->id);
+                if ($get_foto->count() > 0) {
+                    CandidatePict::where('karyawan_id', $id)->update([
+                        'pict_number' => $request->pict_number, // Ambil nomor foto dari input
+                        'pict_name' => $filename, // Simpan path file relatif
+                    ]);
+                } else {
+                    CandidatePict::create([
+                        'candidate_id' => $id, // ID karyawan yang diupload
+                        'pict_number' => $request->pict_number, // Ambil nomor foto dari input
+                        'pict_name' => $filename, // Simpan path file relatif
+                    ]);
+                }
+            }
+            $new_candidates = CandidatePict::get();
+            return response()->json($new_candidates);
+        } else {
+            $new_candidates = CandidatePict::get();
+            return response()->json($new_candidates);
+        }
 
         // Redirect back to the candidate page with a success message
-        return redirect('/pics/AddCandidate')->with('success', 'Candidate picture added successfully.');
+        return redirect('/candidate/takephoto')->with('success', 'Candidate picture added successfully.');
     }
 }

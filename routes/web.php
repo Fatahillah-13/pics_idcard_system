@@ -23,9 +23,18 @@ Auth::routes();
 // Define a group of routes with 'auth' middleware applied
 Route::middleware(['auth'])->group(function () {
     // Define a GET route for the root URL ('/')
+    // Route::get('/', function () {
+    //     // Return a view named 'index' when accessing the root URL
+    //     return view('index');
+    // });
+
+    // Route to All Views
     Route::get('/', function () {
-        // Return a view named 'index' when accessing the root URL
         return view('index');
+    });
+    Route::get('/candidate/store', [HomeController::class, 'pictNumber'])->name('candidate.store');
+    Route::get('/candidate/takephoto', function () {
+        return view('pics.TakePict');
     });
 
     // Choices routes
@@ -33,14 +42,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/department/choices', [HomeController::class, 'departmentChoices']);
     Route::get('/joblevel/choices', [HomeController::class, 'jobLevelChoices']);
 
-
-    // Define a GET route with dynamic placeholders for route parameters
-    Route::get('{routeName}/{name?}', [HomeController::class, 'pageView'])->name('home.dynamic.view');
-
     // candidate routes
     Route::post('/candidate/store', [CandidateController::class, 'storecandidate'])->name('candidate.store');
     Route::post('/candidate/storepict', [CandidateController::class, 'storecandidatepict'])->name('candidate.storepict');
     Route::get('/candidate/edit/{id}', [CandidateController::class, 'editcandidate'])->name('candidate.edit');
     Route::post('/candidate/update/{id}', [CandidateController::class, 'updatecandidate'])->name('candidate.update');
     Route::get('/candidate/delete/{id}', [CandidateController::class, 'deletecandidate'])->name('candidate.delete');
+
+    // Define a GET route with dynamic placeholders for route parameters
+    // Route::get('{routeName}/{name?}', [HomeController::class, 'pageView'])->name('home.dynamic.view');
 });
