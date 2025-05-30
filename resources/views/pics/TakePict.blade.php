@@ -276,6 +276,9 @@
                     imagePath: $('#imagePath').val(), // Data URI from the preview
                 };
 
+                console.log('Payload:', payload);
+                
+
                 // Send the data using AJAX
                 $.ajax({
                     url: '/candidate/update/' + id,
@@ -286,8 +289,8 @@
                     },
                     success: function(response) {
                         // Handle success response
-                        console.log('Data saved successfully:', response);
-                        alert('Data saved successfully!');
+                        alert(response.message || 'Data berhasil disimpan!');
+
                     },
                     error: function(xhr, status, error) {
                         // Handle error response
