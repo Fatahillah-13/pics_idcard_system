@@ -36,6 +36,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/candidate/takephoto', function () {
         return view('pics.TakePict');
     });
+    Route::get('/candidate/addNIK', function () {
+        return view('pics.PrintIDCard');
+    });
 
     // Choices routes
     Route::get('/candidate/choices', [HomeController::class, 'candidatechoices']);

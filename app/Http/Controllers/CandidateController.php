@@ -52,11 +52,6 @@ class CandidateController extends Controller
         return response()->json($candidates);
     }
 
-    public function updatecandidatecoba(Request $request)
-    {
-        return response()->json(['message' => $request]);
-    }
-
     public function updatecandidate(Request $request, $id)
     {
 
@@ -137,49 +132,4 @@ class CandidateController extends Controller
         // Logic to delete candidate data
         return redirect()->route('candidate')->with('success', 'Candidate deleted successfully.');
     }
-
-    // public function updatecandidatepict($request, $id)
-    // {
-    //     // Logic to store candidate picture
-    //     $dataUri = $request->imagePath; // Mengambil data URI dari input
-    //     // Memisahkan metadata dari data URI
-    //     if (preg_match('/^data:image\/(\w+);base64,/', $dataUri, $type)) {
-    //         $dataUri = substr($dataUri, strpos($dataUri, ',') + 1);
-    //         $type = strtolower($type[1]); // Mengambil tipe gambar (jpeg, png, dll)                
-    //         // Decode base64
-    //         $data = base64_decode($dataUri, true);
-    //         if ($data === false) {
-    //             return response()->json(['message' => 'Gagal mendekode gambar.'], 400);
-    //         } else {
-    //             // Membuat nama file yang unik
-    //             $filename = 'pic_' . time() . '.' . $type; // Menggunakan timestamp sebagai nama file
-    //             $filePath = public_path('storage/' . $filename); // Path untuk menyimpan file
-    //             // Menyimpan gambar ke public/storage
-    //             if (file_put_contents($filePath, $data) === false) {
-    //                 return response()->json(['message' => 'Gagal menyimpan gambar.'], 500);
-    //             }
-    //             $get_foto = CandidatePict::where('candidate_id', $id);
-    //             if ($get_foto->count() > 0) {
-    //                 CandidatePict::where('candidate_id', $id)->update([
-    //                     'pict_number' => $request->pict_number, // Ambil nomor foto dari input
-    //                     'pict_name' => $filename, // Simpan path file relatif
-    //                 ]);
-    //             } else {
-    //                 CandidatePict::create([
-    //                     'candidate_id' => $id, // ID karyawan yang diupload
-    //                     'pict_number' => $request->pict_number, // Ambil nomor foto dari input
-    //                     'pict_name' => $filename, // Simpan path file relatif
-    //                 ]);
-    //             }
-    //         }
-    //         $new_candidates = CandidatePict::get();
-    //         return response()->json($new_candidates);
-    //     } else {
-    //         $new_candidates = CandidatePict::get();
-    //         return response()->json($new_candidates);
-    //     }
-
-    //     // Redirect back to the candidate page with a success message
-    //     return redirect('/candidate/takephoto')->with('success', 'Candidate picture added successfully.');
-    // }
 }
