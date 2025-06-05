@@ -46,6 +46,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/joblevel/choices', [HomeController::class, 'jobLevelChoices']);
 
     // candidate routes
+    Route::get('/candidate', [CandidateController::class, 'getCandidate'])->name('candidate.index');
     Route::post('/candidate/store', [CandidateController::class, 'storecandidate'])->name('candidate.store');
     Route::post('/candidate/storepict', [CandidateController::class, 'storecandidatepict'])->name('candidate.storepict');
     Route::get('/candidate/edit/{id}', [CandidateController::class, 'editcandidate'])->name('candidate.edit');

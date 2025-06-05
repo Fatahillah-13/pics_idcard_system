@@ -5,9 +5,16 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Candidate;
 use App\Models\CandidatePict;
+use Yajra\DataTables\DataTables;
 
 class CandidateController extends Controller
 {
+    public function getCandidate()
+    {
+        // Logic to retrieve candidate data
+        $candidates = Candidate::with('candidatepict')->get();
+        return DataTables::of($candidates)->make(true);
+    }
 
     public function storecandidate(Request $request)
     {

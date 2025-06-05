@@ -217,9 +217,8 @@
     <script>
         // Configure a few settings and attach camera
         Webcam.set({
-            width: 500,
+            width: 400,
             height: 300,
-            dest_width: 500,
             fps: 60,
             image_format: 'jpeg',
             jpeg_quality: 90,
