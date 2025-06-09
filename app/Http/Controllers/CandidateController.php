@@ -12,7 +12,9 @@ class CandidateController extends Controller
     public function getCandidate()
     {
         // Logic to retrieve candidate data
-        $candidates = Candidate::with('candidatepict')->get();
+        $candidates = Candidate::whereHas('candidatepict', function ($query) {
+            $query->whereNotNull('pict_name');
+        })->with('candidatepict')->get();
         return DataTables::of($candidates)->make(true);
     }
 

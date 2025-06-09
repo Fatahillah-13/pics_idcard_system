@@ -22,7 +22,43 @@
                     <h5 class="modal-title h4" id="myLargeModalLabel">Tambah NIK</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body"> ... </div>
+                <div class="modal-body">
+                    <div class="row g-4 mb-3">
+                        <div class="col-md-4">
+                            <div class="mb-0">
+                                <label class="form-label">Prefix</label>
+                                <input type="number" class="form-control" id="prefix" placeholder="Text" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="mb-0">
+                                <label class="form-label">Nomor Karyawan</label>
+                                <input type="number" class="form-control" id="employeeID" placeholder="Text">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body table-border-style">
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="addCandidateNumberTable">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>NIK</th>
+                                        <th>Nama</th>
+                                        <th>TTL</th>
+                                        <th>Tanggal Masuk</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-primary">Simpan NIK</button>
+                </div>
             </div>
         </div>
     </div>
@@ -36,11 +72,12 @@
                             <tr>
                                 <th></th>
                                 <th>No.</th>
+                                <th>NIK</th>
                                 <th>Nama</th>
                                 <th>Jabatan</th>
                                 <th>Departemen</th>
-                                <th>Tempat Lahir</th>
-                                <th>Tgl. Lahir</th>
+                                <th>TTL</th>
+                                <th>Tanggal Masuk</th>
                                 <th>Opsi</th>
                             </tr>
                         </thead>
@@ -102,14 +139,51 @@
                             selectedIds.push(selectedData[i].id); // assuming your row has an 'id' field
                         }
 
-                        // Optional: format as a list or plain text
-                        let content = selectedIds.length ?
-                            `<p>Selected IDs:</p><ul>${selectedIds.map(id => `<li>${id}</li>`).join('')}</ul>` :
-                            '<p>No rows selected.</p>';
-
-                        // Set content inside modal body
-                        $('#addCandidateNumberModal .modal-body').html(content);
+                        // Open the modal to add NIK for selected candidates
                         $('#addCandidateNumberModal').modal('show');
+                        // Fill the modal table body manually without DataTable
+                        let tbody = $('#addCandidateNumberTable tbody');
+                        tbody.empty();
+                        for (let i = 0; i < selectedData.length; i++) {
+                            let row = selectedData[i];
+                            let birthdate = row.birthdate ? row.birthdate.split('-') : [];
+                            let formattedDate = birthdate.length === 3 ?
+                                `${birthdate[2]}-${birthdate[1]}-${birthdate[0]}` : row.birthdate;
+                            let ttl = `${row.birthplace}, ${formattedDate}`;
+                            let firstWorkingDay = row.first_working_day ? row.first_working_day.split('-') : [];
+                            let formattedFirstWorkingDay = firstWorkingDay.length === 3 ?
+                                `${firstWorkingDay[2]}-${firstWorkingDay[1]}-${firstWorkingDay[0]}` : row
+                                .first_working_day;
+                            tbody.append(`
+                                <tr>
+                                    <td>${i + 1}</td>
+                                    <td>${row.employee_id || ''}</td>
+                                    <td>${row.name || ''}</td>
+                                    <td>${ttl}</td>
+                                    <td>${formattedFirstWorkingDay || ''}</td>
+                                </tr>
+                            `);
+                        }
+                        // Set the prefix based on first_working_day
+                        let prefix = '';
+                        if (selectedData.length > 0 && selectedData[0].first_working_day) {
+                            let parts = selectedData[0].first_working_day.split('-');
+                            if (parts.length === 3) {
+                                // parts[0] = yyyy, parts[1] = mm
+                                prefix = parts[0].slice(2, 4) + parts[1] + 0;
+                            }
+                        }
+                        $('#prefix').val(prefix);
+
+                        // set employeeID input based on database
+                        let maxEmployeeID = 0;
+                        for (let i = 0; i < selectedData.length; i++) {
+                            if (selectedData[i].employee_id && parseInt(selectedData[i].employee_id) > maxEmployeeID) {
+                                maxEmployeeID = parseInt(selectedData[i].employee_id);
+                            }
+                        }
+                        $('#employeeID').val(maxEmployeeID + 1);
+                        
                     }
                 },
                 {
@@ -144,6 +218,9 @@
                     }
                 },
                 {
+                    data: 'employee_id'
+                },
+                {
                     data: 'name'
                 },
                 {
@@ -153,10 +230,22 @@
                     data: 'department'
                 },
                 {
-                    data: 'birthplace'
+                    data: null,
+                    render: function(data, type, row) {
+                        // Format birthdate from yyyy-mm-dd to dd-mm-yyyy
+                        let date = row.birthdate ? row.birthdate.split('-') : [];
+                        let formattedDate = date.length === 3 ? `${date[2]}-${date[1]}-${date[0]}` : row
+                            .birthdate;
+                        return `${row.birthplace}, ${formattedDate}`;
+                    }
                 },
                 {
-                    data: 'birthdate'
+                    data: 'first_working_day',
+                    render: function(data, type, row) {
+                        if (!data) return '';
+                        let date = data.split('-');
+                        return date.length === 3 ? `${date[2]}-${date[1]}-${date[0]}` : data;
+                    }
                 },
                 {
                     data: null,
