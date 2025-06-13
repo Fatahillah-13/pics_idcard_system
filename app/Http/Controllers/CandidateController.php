@@ -136,6 +136,59 @@ class CandidateController extends Controller
         return redirect('/candidate/takephoto')->with('success', 'Candidate updated successfully.');
     }
 
+    public function getMaxEmployeeID(Request $request)
+    {
+        // Validasi input tahun dan bulan
+        $request->validate([
+            'year' => 'required|digits:4',
+            'month' => 'required|digits_between:1,2'
+        ]);
+
+        $year = $request->year;
+        $month = str_pad($request->month, 2, '0', STR_PAD_LEFT); // Pastikan dua digit
+
+        // Query untuk mengambil employee_id tertinggi berdasarkan bulan dan tahun
+        $maxID = Candidate::whereYear('first_working_day', $year)
+            ->whereMonth('first_working_day', $month)
+            ->max('employee_id');
+
+        return response()->json([
+            'max_employee_id' => $maxID ?? 0
+        ]);
+    }
+
+    public function updatecandidateNIK(Request $request)
+    {
+        $candidates = $request->input('candidates');
+
+        if (!$candidates || !is_array($candidates)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid candidate data.'
+            ]);
+        }
+
+        try {
+            foreach ($candidates as $data) {
+                if (isset($data['id'], $data['employee_id'])) {
+                    Candidate::where('id', $data['id'])->update([
+                        'employee_id' => $data['employee_id']
+                    ]);
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Employee IDs updated successfully.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function deletecandidate($id)
     {
         // Logic to delete candidate data

@@ -57,7 +57,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                    <button type="button" class="btn btn-primary">Simpan NIK</button>
+                    <button type="button" id="generateBtn" class="btn btn-primary">Simpan NIK</button>
                 </div>
             </div>
         </div>
@@ -70,7 +70,9 @@
                     <table id="colum-select" class="table table-striped table-bordered nowrap">
                         <thead>
                             <tr>
-                                <th></th>
+                                <th>
+                                    <input type="checkbox" id="select-all" />
+                                </th>
                                 <th>No.</th>
                                 <th>NIK</th>
                                 <th>Nama</th>
@@ -102,6 +104,7 @@
     <script src="{{ URL::asset('build/js/plugins/autoFill.bootstrap5.min.js') }}"></script>
     <script src="{{ URL::asset('build/js/plugins/dataTables.keyTable.min.js') }}"></script>
     <script src="{{ URL::asset('build/js/plugins/keyTable.bootstrap5.min.js') }}"></script> --}}
+    {{-- Datatable --}}
     <script>
         // [ Autofill ]
         // $('#autofill').DataTable({
@@ -125,7 +128,7 @@
             scrollCollapse: true,
             paging: false,
         });
-        $('#colum-select').DataTable({
+        let columSelectTable = $('#colum-select').DataTable({
             dom: 'Bfrtip',
             buttons: [{
                     text: '+ Tambah NIK',
@@ -139,18 +142,42 @@
                             selectedIds.push(selectedData[i].id); // assuming your row has an 'id' field
                         }
 
+                        // alert when month & year of first_working_day is different
+                        if (selectedData.length > 1) {
+                            let firstDate = selectedData[0].first_working_day ? selectedData[0]
+                                .first_working_day.split('-') : [];
+                            let firstMonth = firstDate.length === 3 ? firstDate[1] : null;
+                            let firstYear = firstDate.length === 3 ? firstDate[0] : null;
+                            for (let i = 1; i < selectedData.length; i++) {
+                                let currDate = selectedData[i].first_working_day ? selectedData[i]
+                                    .first_working_day.split('-') : [];
+                                let currMonth = currDate.length === 3 ? currDate[1] : null;
+                                let currYear = currDate.length === 3 ? currDate[0] : null;
+                                if (currMonth !== firstMonth || currYear !== firstYear) {
+                                    alert(
+                                        'Perhatian: Bulan & tahun tanggal masuk berbeda untuk beberapa kandidat.'
+                                    );
+                                    $('#addCandidateNumberModal').modal('hide');
+                                    break;
+                                }
+                            }
+                        }
+
                         // Open the modal to add NIK for selected candidates
                         $('#addCandidateNumberModal').modal('show');
                         // Fill the modal table body manually without DataTable
                         let tbody = $('#addCandidateNumberTable tbody');
                         tbody.empty();
+
+                        // Loop through selected data and append rows
                         for (let i = 0; i < selectedData.length; i++) {
                             let row = selectedData[i];
                             let birthdate = row.birthdate ? row.birthdate.split('-') : [];
                             let formattedDate = birthdate.length === 3 ?
                                 `${birthdate[2]}-${birthdate[1]}-${birthdate[0]}` : row.birthdate;
                             let ttl = `${row.birthplace}, ${formattedDate}`;
-                            let firstWorkingDay = row.first_working_day ? row.first_working_day.split('-') : [];
+                            let firstWorkingDay = row.first_working_day ? row.first_working_day.split('-') :
+                                [];
                             let formattedFirstWorkingDay = firstWorkingDay.length === 3 ?
                                 `${firstWorkingDay[2]}-${firstWorkingDay[1]}-${firstWorkingDay[0]}` : row
                                 .first_working_day;
@@ -164,6 +191,7 @@
                                 </tr>
                             `);
                         }
+
                         // Set the prefix based on first_working_day
                         let prefix = '';
                         if (selectedData.length > 0 && selectedData[0].first_working_day) {
@@ -176,14 +204,86 @@
                         $('#prefix').val(prefix);
 
                         // set employeeID input based on database
-                        let maxEmployeeID = 0;
-                        for (let i = 0; i < selectedData.length; i++) {
-                            if (selectedData[i].employee_id && parseInt(selectedData[i].employee_id) > maxEmployeeID) {
-                                maxEmployeeID = parseInt(selectedData[i].employee_id);
+                        let employeeIDInput = $('#employeeID');
+                        let firstWorkingDay = selectedData.length > 0 ? selectedData[0].first_working_day :
+                            null;
+
+                        if (firstWorkingDay) {
+                            let parts = firstWorkingDay.split('-');
+                            if (parts.length === 3) {
+                                let year = parts[0];
+                                let month = parts[1];
+                                // AJAX request to get max employee_id for same month & year
+                                $.ajax({
+                                    url: '{{ route('candidate.maxEmployeeID') }}',
+                                    method: 'GET',
+                                    data: {
+                                        year: year,
+                                        month: month
+                                    },
+                                    success: function(response) {
+                                        // response.max_employee_id should be the max employee_id or 0 if none
+                                        let nextID = (parseInt(response.max_employee_id) || 0) +
+                                            1;
+                                        employeeIDInput.val(nextID);
+                                    },
+                                    error: function() {
+                                        employeeIDInput.val('');
+                                    }
+                                });
                             }
                         }
-                        $('#employeeID').val(maxEmployeeID + 1);
-                        
+
+                        // Handle the generate button click
+                        $('#generateBtn').on('click', function() {
+                            let employeeID = $('#employeeID').val();
+                            let EmployeeNIK = $('#prefix').val() + employeeID;
+                            if (!employeeID) {
+                                alert('Mohon masukkan Nomor Karyawan.');
+                                return;
+                            }
+
+                            // Extract selected rows into plain array
+                            let rawData = columSelectTable.rows({
+                                selected: true
+                            }).data().toArray();
+
+                            // Create new array with updated employee_id
+                            let selectedData = rawData.map((item, index) => ({
+                                id: item.id,
+                                employee_id: EmployeeNIK + String(index + 1).padStart(2,
+                                    '0'),
+                            }));
+
+                            $.ajax({
+                                url: '{{ route('candidate.updateEmployeeID') }}',
+                                method: 'POST',
+                                data: JSON.stringify({
+                                    _token: '{{ csrf_token() }}',
+                                    candidates: selectedData
+                                }),
+                                contentType: 'application/json',
+                                success: function(response) {
+                                    if (response.success) {
+                                        alert('NIK berhasil disimpan.');
+                                        columSelectTable.ajax.reload();
+                                    } else {
+                                        alert(
+                                            'Gagal menyimpan NIK. Silakan coba lagi.'
+                                            );
+                                    }
+                                },
+                                error: function(xhr, status, error) {
+                                    console.error('AJAX Error:', error);
+                                    alert(
+                                        'Terjadi kesalahan saat menyimpan NIK. Silakan coba lagi.'
+                                        );
+                                }
+                            });
+
+                            $('#addCandidateNumberModal').modal('hide');
+                            columSelectTable.ajax.reload();
+                        });
                     }
                 },
                 {
@@ -243,20 +343,53 @@
                     data: 'first_working_day',
                     render: function(data, type, row) {
                         if (!data) return '';
+                        const months = [
+                            'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                            'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+                        ];
                         let date = data.split('-');
-                        return date.length === 3 ? `${date[2]}-${date[1]}-${date[0]}` : data;
+                        if (date.length === 3) {
+                            let day = date[2];
+                            let month = months[parseInt(date[1], 10) - 1];
+                            let year = date[0];
+                            return `${day} ${month} ${year}`;
+                        }
+                        return data;
                     }
                 },
                 {
                     data: null,
                     render: function(data, type, row) {
-                        return `<button type="button" class="btn btn-primary btn-sm" onclick="openViewModal(${row.id})">View</button>
-                                <button type="button" class="btn btn-danger btn-sm" onclick="openDeleteModal(${row.id})">Delete</button>`;
+                        return `<button type="button" class="btn btn-primary btn-sm" onclick="openViewModal(${row.id})">View</button>`;
                     }
                 }
             ]
         });
+
+        // Handle Select All checkbox click
+        $('#select-all').on('click', function() {
+            if (this.checked) {
+                columSelectTable.rows({
+                    search: 'applied'
+                }).select();
+            } else {
+                columSelectTable.rows().deselect();
+            }
+        });
+
+        // Update Select All checkbox when rows are selected/deselected
+        columSelectTable.on('select deselect', function() {
+            let allRows = columSelectTable.rows({
+                search: 'applied'
+            }).count();
+            let selectedRows = columSelectTable.rows({
+                search: 'applied',
+                selected: true
+            }).count();
+            $('#select-all').prop('checked', allRows === selectedRows);
+        });
     </script>
+    {{-- Modals --}}
     <script>
         function openViewModal(id) {
             // Logic to open edit modal and populate data
