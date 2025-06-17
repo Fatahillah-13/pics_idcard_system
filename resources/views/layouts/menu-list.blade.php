@@ -35,3 +35,15 @@
         </li>
     </ul>
 </li>
+<li class="pc-item pc-caption">
+    <label data-i18n="Settings">Settings</label>
+    <i class="ph-duotone ph-gauge"></i>
+</li>
+<li class="pc-item">
+    <a href="/candidate/idcard" class="pc-link">
+        <span class="pc-micon">
+            <i class="ph-duotone ph-gauge"></i>
+        </span>
+        <span class="pc-mtext" data-i18n="Template ID Card">Template ID Card</span>
+    </a>
+</li>

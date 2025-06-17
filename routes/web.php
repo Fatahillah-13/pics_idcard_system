@@ -3,6 +3,7 @@
 use App\Http\Controllers\CandidateController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\SettingsController;
 use Illuminate\Support\Facades\Auth;
 
 /*
@@ -39,6 +40,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/candidate/addNIK', function () {
         return view('pics.PrintIDCard');
     });
+    Route::get('/candidate/idcard', function () {
+        return view('settings.CardTemplates');
+    });
 
     // Choices routes
     Route::get('/candidate/choices', [HomeController::class, 'candidatechoices']);
@@ -54,6 +58,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/candidate/edit/{id}', [CandidateController::class, 'editcandidate'])->name('candidate.edit');
     Route::post('/candidate/update/{id}', [CandidateController::class, 'updatecandidate'])->name('candidate.update');
     Route::get('/candidate/delete/{id}', [CandidateController::class, 'deletecandidate'])->name('candidate.delete');
+
+    // ID Card Template Route
+    Route::post('/card-template/upload', [SettingsController::class, 'uploadIdCardTemplate'])->name('idcard.upload');
 
     // Define a GET route with dynamic placeholders for route parameters
     // Route::get('{routeName}/{name?}', [HomeController::class, 'pageView'])->name('home.dynamic.view');
