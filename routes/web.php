@@ -40,12 +40,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/candidate/addNIK', function () {
         return view('pics.PrintIDCard');
     });
-    Route::get('/candidate/idcard', function () {
-        return view('settings.CardTemplates');
-    });
 
     // Choices routes
     Route::get('/candidate/choices', [HomeController::class, 'candidatechoices']);
+    Route::get('/candidate-no-pict/choices', [HomeController::class, 'candidateNoPictChoices']);
     Route::get('/department/choices', [HomeController::class, 'departmentChoices']);
     Route::get('/joblevel/choices', [HomeController::class, 'jobLevelChoices']);
 
@@ -60,6 +58,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/candidate/delete/{id}', [CandidateController::class, 'deletecandidate'])->name('candidate.delete');
 
     // ID Card Template Route
+    Route::get('/candidate/idcard', [SettingsController::class, 'showGallery'])->name('idcard.gallery');
     Route::post('/card-template/upload', [SettingsController::class, 'uploadIdCardTemplate'])->name('idcard.upload');
 
     // Define a GET route with dynamic placeholders for route parameters

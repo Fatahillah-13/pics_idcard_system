@@ -184,7 +184,7 @@
 
         candidateChoices
             .setChoices(() =>
-                fetch('/candidate/choices')
+                fetch('/candidate-no-pict/choices')
                 .then(response => response.json())
             )
             .then(() => {

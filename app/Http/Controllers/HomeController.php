@@ -68,6 +68,30 @@ class HomeController extends Controller
         }));
     }
 
+    public function candidateNoPictChoices(Request $request)
+    {
+        // Logic to handle candidates without pictures
+        $candidates = Candidate::whereDoesntHave('candidatepict', function ($query) {
+            $query->whereNotNull('pict_name');
+        })->get();
+
+        return response()->json($candidates->map(function ($candidates) {
+            return [
+                'label' => $candidates->name,
+                'value' => $candidates->name,
+                'customProperties' => [
+                    'candidateID' => $candidates->id,
+                    'birthplace' => $candidates->birthplace,
+                    'birthdate' => $candidates->birthdate,
+                    'first_working_day' => $candidates->first_working_day,
+                    'job_level' => $candidates->job_level,
+                    'department' => $candidates->department,
+                    'pict_number' => $candidates->candidatepict ? $candidates->candidatepict->pict_number : null,
+                ]
+            ];
+        }));
+    }
+
     public function departmentChoices(Request $request){
         // Logic to handle department choices
         $departments = Department::all();

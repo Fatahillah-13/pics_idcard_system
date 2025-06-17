@@ -7,11 +7,11 @@ use Illuminate\Http\Request;
 
 class SettingsController extends Controller
 {
-    // Method to Get All ID Card Templates
-    public function getIdCardTemplates()
+    // Method to Show ID Card Template Gallery
+    public function showGallery()
     {
-        $templates = IdCardTemplate::all();
-        return response()->json($templates);
+        $templates = IdCardTemplate::latest()->get(); // Get all uploaded templates
+        return view('settings.CardTemplates', compact('templates'));
     }
 
     // Method to Upload ID Card Template
@@ -25,7 +25,7 @@ class SettingsController extends Controller
         ]);
 
         $file = $request->file('image_path');
-        $filename = time() . '_' . $file->getClientOriginalName();
+        $filename = $file->getClientOriginalName();
         $file->storeAs('idCardTemplate', $filename, 'public');
         $filePath = 'storage/idCardTemplate/' . $filename;
 

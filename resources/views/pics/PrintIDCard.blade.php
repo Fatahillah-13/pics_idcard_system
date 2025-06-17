@@ -13,7 +13,7 @@
 @endsection
 
 @section('content')
-    {{-- Modal --}}
+    {{-- Modal Add NIK --}}
     <div class="modal fade bd-example-modal-lg" id="addCandidateNumberModal" tabindex="-1" role="dialog"
         aria-labelledby="myLargeModalLabel">
         <div class="modal-dialog modal-lg">
@@ -58,6 +58,50 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
                     <button type="button" id="generateBtn" class="btn btn-primary">Simpan NIK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{-- Modal Print --}}
+    <div class="modal fade bd-example-modal-lg" id="printIDcardModal" tabindex="-1" role="dialog"
+        aria-labelledby="myLargeModalLabel">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title h4" id="myLargeModalLabel">Tambah NIK</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="card-body table-border-style">
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="printIDcardTable">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>
+                                            <div class="form-check">
+                                                <label class="form-check-label" for="ctpatCheckbox">
+                                                    CTPAT
+                                                </label>
+                                                <input class="form-check-input" type="checkbox" id="ctpatCheckboxAll">
+                                            </div>
+                                        </th>
+                                        <th>Foto</th>
+                                        <th>NIK</th>
+                                        <th>Nama</th>
+                                        <th>Jabatan (Departemen)</th>
+                                        <th>Tanggal Masuk</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" id="generateIDCardBtn" class="btn btn-primary">Print ID Card</button>
                 </div>
             </div>
         </div>
@@ -131,6 +175,7 @@
         let columSelectTable = $('#colum-select').DataTable({
             dom: 'Bfrtip',
             buttons: [{
+                    // Button to add NIK
                     text: '+ Tambah NIK',
                     action: function(e, dt, node, config) {
                         const selectedData = dt.rows({
@@ -270,14 +315,14 @@
                                     } else {
                                         alert(
                                             'Gagal menyimpan NIK. Silakan coba lagi.'
-                                            );
+                                        );
                                     }
                                 },
                                 error: function(xhr, status, error) {
                                     console.error('AJAX Error:', error);
                                     alert(
                                         'Terjadi kesalahan saat menyimpan NIK. Silakan coba lagi.'
-                                        );
+                                    );
                                 }
                             });
 
@@ -287,10 +332,67 @@
                     }
                 },
                 {
+                    // Button to print ID Card
                     text: 'Cetak ID Card',
                     className: 'btn btn-success',
                     action: function(e, dt, node, config) {
-                        alert('Button 2 clicked on');
+
+                        const selectedData = dt.rows({
+                            selected: true
+                        }).data();
+                        let selectedIds = [];
+
+                        console.log(selectedData);
+
+
+                        for (let i = 0; i < selectedData.length; i++) {
+                            selectedIds.push(selectedData[i].id); // assuming your row has an 'id' field
+                        }
+
+                        $('#printIDcardModal').modal('show');
+                        let tbody = $('#printIDcardTable tbody');
+                        tbody.empty();
+
+                        // Loop through selected data and append rows
+                        for (let i = 0; i < selectedData.length; i++) {
+                            let row = selectedData[i];
+                            let birthdate = row.birthdate ? row.birthdate.split('-') : [];
+                            let formattedDate = birthdate.length === 3 ?
+                                `${birthdate[2]}-${birthdate[1]}-${birthdate[0]}` : row.birthdate;
+                            let ttl = `${row.birthplace}, ${formattedDate}`;
+                            let firstWorkingDay = row.first_working_day ? row.first_working_day.split('-') :
+                                [];
+                            let formattedFirstWorkingDay = firstWorkingDay.length === 3 ?
+                                `${firstWorkingDay[2]}-${firstWorkingDay[1]}-${firstWorkingDay[0]}` : row
+                                .first_working_day;
+                            tbody.append(`
+                                <tr>
+                                    <td>${i + 1}</td>
+                                    <td>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="ctpatCheckbox${row.id}">
+                                        </div>
+                                    <td>
+                                    ${row.candidatepict && row.candidatepict.pict_name
+                                        ? `<img src="/storage/${row.candidatepict.pict_name}" alt="Photo" width="60" height="80" style="object-fit:cover; border-radius:4px;">`
+                                        : '<span class="text-muted">-</span>'}
+                                    </td>
+                                    <td>${row.employee_id || ''}</td>
+                                    <td>${row.name || ''}</td>
+                                    <td>${row.job_level || ''} (${row.department || ''})</td>
+                                    <td>${formattedFirstWorkingDay || ''}</td>
+                                </tr>
+                            `);
+                        }
+
+                        $('#ctpatCheckboxAll').on('click', function() {
+                            let isChecked = this.checked;
+                            $('#printIDcardTable tbody input[type="checkbox"]').each(function() {
+                                this.checked = isChecked;
+                            });
+                        });
+
+
                     }
                 }
             ],
