@@ -4,12 +4,22 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Candidate;
+use Illuminate\Support\Facades\Storage;
 use App\Models\CandidatePict;
 use Yajra\DataTables\DataTables;
 
 class CandidateController extends Controller
 {
     public function getCandidate()
+    {
+        // Logic to retrieve candidate data
+        $candidates = Candidate::whereHas('candidatepict', function ($query) {
+            $query->whereNotNull('pict_name');
+        })->with('candidatepict')->get();
+        return response()->json($candidates);
+    }
+
+    public function getCandidateDatatable()
     {
         // Logic to retrieve candidate data
         $candidates = Candidate::whereHas('candidatepict', function ($query) {
@@ -57,8 +67,21 @@ class CandidateController extends Controller
 
     public function editcandidate($id)
     {
-        return Candidate::with('candidatepict')->findOrFail($id);
-        return response()->json($candidates);
+        $candidate = Candidate::with('candidatepict')->findOrFail($id);
+        return response()->json([
+            'name' => $candidate->name,
+            'birthplace' => $candidate->birthplace,
+            'job_level' => $candidate->job_level,
+            'department' => $candidate->department,
+            'birthdate' => $candidate->birthdate,
+            'first_working_day' => $candidate->first_working_day,
+            'candidatepict' => [
+                'pict_number' => $candidate->candidatepict->pict_number ?? null,
+                'image_url' => $candidate->candidatepict && $candidate->candidatepict->pict_name
+                    ? Storage::url($candidate->candidatepict->pict_name)
+                    : 'tidak ada gambar',
+            ],
+        ]);
     }
 
     public function updatecandidate(Request $request, $id)
@@ -93,7 +116,7 @@ class CandidateController extends Controller
         }
 
 
-        // If pict is provided, update it with updatecandidatepict function
+        // If pict is provided, update it in database
         $dataUri = $request->imagePath;
         if ($dataUri) {
             // pass the request to updatecandidatepict function
