@@ -212,9 +212,22 @@ class CandidateController extends Controller
         }
     }
 
-    public function deletecandidate($id)
+    public function deletecandidate($ids)
     {
-        // Logic to delete candidate data
-        return redirect()->route('candidate')->with('success', 'Candidate deleted successfully.');
+        $idArray = explode(',', $ids);
+
+        foreach ($idArray as $id) {
+            $candidate = Candidate::find($id);
+            if ($candidate) {
+                // Delete candidate picture if it exists
+                if ($candidate->candidatepict && $candidate->candidatepict->pict_name) {
+                    Storage::delete($candidate->candidatepict->pict_name);
+                    $candidate->candidatepict->delete();
+                }
+                $candidate->delete();
+            }
+        }
+
+        return response()->json(['success' => true]);
     }
 }

@@ -576,7 +576,53 @@
                             // });
                         });
                     }
+                },
+                {
+                    text: 'Hapus',
+                    className: 'btn btn-danger',
+                    action: function(e, dt, node, config) {
+                        const selectedData = dt.rows({
+                            selected: true
+                        }).data();
+
+                        // Collect selected IDs
+                        const selectedIds = selectedData.map(row => row.id);
+
+                        if (selectedIds.length === 0) {
+                            alert('Tidak ada kandidat yang dipilih untuk dihapus.');
+                            return;
+                        }
+
+                        if (confirm(
+                                `Apakah Anda yakin ingin menghapus ${selectedIds.length} kandidat terpilih?`
+                                )) {
+                            $.ajax({
+                                url: '/candidate/delete/' + selectedIds.join(','),
+                                method: 'DELETE',
+                                data: {
+                                    _token: '{{ csrf_token() }}'
+                                },
+                                success: function(response) {
+                                    if (response.success) {
+                                        alert('Kandidat berhasil dihapus.');
+                                        columSelectTable.ajax.reload(); // Reload the DataTable
+                                    } else {
+                                        alert('Gagal menghapus kandidat. Silakan coba lagi.');
+                                    }
+                                },
+                                error: function(xhr, status, error) {
+                                    console.error('AJAX Error:', error);
+                                    console.log(xhr.responseText);
+                                    console.log(xhr.status);
+                                    alert(
+                                        'Terjadi kesalahan saat menghapus kandidat. Silakan coba lagi.');
+                                }
+                            });
+                        }
+                    }
                 }
+
+
             ],
             columnDefs: [{
                 orderable: false,
@@ -764,7 +810,7 @@
         function submitCandidateForm() {
 
             const id = $('#idCandidate').val(); // Ambil ID dari input atau parameter
-            
+
             const formData = new FormData();
             formData.append('name', $('#inputName').val());
             formData.append('birthPlace', $('#inputBirthPlace').val());
