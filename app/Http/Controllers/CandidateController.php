@@ -19,6 +19,14 @@ class CandidateController extends Controller
         return response()->json($candidates);
     }
 
+    public function getNewCandidateDatatable(){
+        // Logic to retrieve candidate data
+        $candidates = Candidate::whereHas('candidatepict', function ($query) {
+            $query->whereNull('pict_name');
+        })->with('candidatepict')->get();
+        return DataTables::of($candidates)->make(true);
+    }
+
     public function getCandidateDatatable()
     {
         // Logic to retrieve candidate data
@@ -67,7 +75,7 @@ class CandidateController extends Controller
 
     public function editcandidate($id)
     {
-        $candidate = Candidate::with('candidatepict')->findOrFail($id);
+        $candidate = Candidate::findOrFail($id);
         return response()->json([
             'name' => $candidate->name,
             'birthplace' => $candidate->birthplace,
@@ -156,7 +164,7 @@ class CandidateController extends Controller
             }
         }
         // Redirect back to the candidate page with a success message
-        return redirect('/candidate/takephoto')->with('success', 'Candidate updated successfully.');
+        return response()->json(['success' => true, 'message' => 'Candidate updated successfully.']);
     }
 
     public function getMaxEmployeeID(Request $request)

@@ -49,6 +49,7 @@ Route::middleware(['auth'])->group(function () {
 
     // candidate routes
     Route::get('/candidate/get', [CandidateController::class, 'getCandidate'])->name('candidate.get');
+    Route::get('/candidate/new', [CandidateController::class, 'getNewCandidateDatatable'])->name('candidate.new');
     Route::get('/candidate', [CandidateController::class, 'getCandidateDatatable'])->name('candidate.index');
     Route::post('/candidate/store', [CandidateController::class, 'storecandidate'])->name('candidate.store');
     Route::get('/candidate/max-employee-id', [CandidateController::class, 'getMaxEmployeeID'])->name('candidate.maxEmployeeID');
