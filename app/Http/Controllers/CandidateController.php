@@ -19,7 +19,8 @@ class CandidateController extends Controller
         return response()->json($candidates);
     }
 
-    public function getNewCandidateDatatable(){
+    public function getNewCandidateDatatable()
+    {
         // Logic to retrieve candidate data
         $candidates = Candidate::whereHas('candidatepict', function ($query) {
             $query->whereNull('pict_name');
@@ -188,6 +189,38 @@ class CandidateController extends Controller
         ]);
     }
 
+    // public function updatecandidateNIK(Request $request)
+    // {
+    //     $candidates = $request->input('candidates');
+
+    //     if (!$candidates || !is_array($candidates)) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Invalid candidate data.'
+    //         ]);
+    //     }
+
+    //     try {
+    //         foreach ($candidates as $data) {
+    //             if (isset($data['id'], $data['employee_id'])) {
+    //                 Candidate::where('id', $data['id'])->update([
+    //                     'employee_id' => $data['employee_id']
+    //                 ]);
+    //             }
+    //         }
+
+    //         return response()->json([
+    //             'success' => true,
+    //             'message' => 'Employee IDs updated successfully.'
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'An error occurred: ' . $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
+
     public function updatecandidateNIK(Request $request)
     {
         $candidates = $request->input('candidates');
@@ -200,6 +233,33 @@ class CandidateController extends Controller
         }
 
         try {
+            // 1. Cek duplikasi employee_id di data input
+            $employeeIds = array_column($candidates, 'employee_id');
+            if (count($employeeIds) !== count(array_unique($employeeIds))) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Duplicate employee_id found in request data.'
+                ], 422);
+            }
+
+            // 2. Ambil semua employee_id dari database yang sudah ada (kecuali milik kandidat itu sendiri)
+            $inputIds = array_column($candidates, 'id');
+            $inputEmployeeIds = array_column($candidates, 'employee_id');
+
+            $existing = Candidate::whereIn('employee_id', $inputEmployeeIds)
+                ->whereNotIn('id', $inputIds)
+                ->pluck('employee_id')
+                ->toArray();
+
+            if (!empty($existing)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'One or more employee_id already exist in the database.',
+                    'duplicates' => $existing
+                ], 422);
+            }
+
+            // 3. Lakukan update
             foreach ($candidates as $data) {
                 if (isset($data['id'], $data['employee_id'])) {
                     Candidate::where('id', $data['id'])->update([
@@ -219,6 +279,7 @@ class CandidateController extends Controller
             ], 500);
         }
     }
+
 
     public function deletecandidate($ids)
     {

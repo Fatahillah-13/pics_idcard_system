@@ -391,8 +391,15 @@
                                     },
                                     success: function(response) {
                                         // response.max_employee_id should be the max employee_id or 0 if none
-                                        let nextID = (parseInt(response.max_employee_id) || 0) +
-                                            1;
+                                        // Ambil setelah digit ke-5, lalu tambah 1
+                                        let maxID = response.max_employee_id ? response.max_employee_id.toString() : '';
+                                        let nextID = '';
+                                        if (maxID.length > 5) {
+                                            let lastDigits = maxID.substring(5);
+                                            nextID = (parseInt(lastDigits, 10) || 0) + 1;
+                                        } else {
+                                            nextID = 1;
+                                        }
                                         employeeIDInput.val(nextID);
                                     },
                                     error: function() {
@@ -419,8 +426,7 @@
                             // Create new array with updated employee_id
                             let selectedData = rawData.map((item, index) => ({
                                 id: item.id,
-                                employee_id: EmployeeNIK + String(index + 1).padStart(2,
-                                    '0'),
+                                employee_id: EmployeeNIK,
                             }));
 
                             $.ajax({
@@ -433,7 +439,6 @@
                                 contentType: 'application/json',
                                 success: function(response) {
                                     if (response.success) {
-                                        alert('NIK berhasil disimpan.');
                                         columSelectTable.ajax.reload();
                                     } else {
                                         alert(
