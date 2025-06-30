@@ -57,9 +57,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/candidate/edit/{id}', [CandidateController::class, 'editcandidate'])->name('candidate.edit');
     Route::post('/candidate/update/{id}', [CandidateController::class, 'updatecandidate'])->name('candidate.update');
     Route::delete('/candidate/delete/{id}', [CandidateController::class, 'deletecandidate'])->name('candidate.delete');
+    Route::post('/candidate/print', [CandidateController::class, 'printIDCard'])->name('candidate.printIDCard');
 
     // Print ID Card Route
-    Route::get('/candidate/print-idcard', [CandidateController::class, 'printIDCard'])->name('candidate.printIDCard');
+    Route::post('/candidate/print-idcard', [CandidateController::class, 'printIDCard'])->name('candidate.printIDCard');
 
     // ID Card Template Route
     Route::get('/candidate/idcard', [SettingsController::class, 'showGallery'])->name('idcard.gallery');

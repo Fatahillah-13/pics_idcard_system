@@ -538,47 +538,65 @@
                                 let checkbox = row.find('input[type="checkbox"]');
                                 let employeeID = row.find('td:nth-child(4)').text().trim();
                                 let name = row.find('td:nth-child(5)').text().trim();
-                                let jobLevel = row.find('td:nth-child(6)').text().trim();
-                                let department = jobLevel.split(' (')[1].replace(')', '')
-                                    .trim();
                                 let firstWorkingDay = row.find('td:nth-child(7)').text()
                                     .trim();
                                 formData.push({
-                                    ctpat: checkbox.is(':checked') ? 1 : 0,
                                     employee_id: employeeID,
-                                    name: name,
+                                    name:name,
+                                    ctpat: checkbox.is(':checked') ? 1 : 0,
                                 });
                             });
 
-                            console.log(formData);
+                            if (formData.length === 0) {
+                                alert('Tidak ada kandidat yang dipilih untuk dicetak ID Card-nya.');
+                                return;
+                            }
+
+                            // check type data employee_id
+                            for (let i = 0; i < formData.length; i++) { 
+                                if (typeof formData[i].employee_id !== 'string' || formData[i]
+                                    .employee_id.trim() === '') {
+                                    alert('Mohon pastikan semua kandidat memiliki NIK yang valid.');
+                                    return;
+                                }
+                            }
 
                             // AJAX request to print ID Cards
-                            // $.ajax({
-                            //     url: '{{ route('candidate.printIDCard') }}',
-                            //     method: 'POST',
-                            //     data: JSON.stringify({
-                            //         _token: '{{ csrf_token() }}',
-                            //         candidates: formData,
-                            //     }),
-                            //     contentType: 'application/json',
-                            //     success: function(response) {
-                            //         if (response.success) {
-                            //             alert('ID Card berhasil dicetak.');
-                            //             $('#printIDcardModal').modal('hide');
-                            //             columSelectTable.ajax.reload();
-                            //         } else {
-                            //             alert(
-                            //                 'Gagal mencetak ID Card. Silakan coba lagi.'
-                            //             );
-                            //         }
-                            //     },
-                            //     error: function(xhr, status, error) {
-                            //         console.error('AJAX Error:', error);
-                            //         alert(
-                            //             'Terjadi kesalahan saat mencetak ID Card. Silakan coba lagi.'
-                            //         );
-                            //     }
-                            // });
+                            $.ajax({
+                                url: '{{ route('candidate.printIDCard') }}',
+                                method: 'POST',
+                                data: JSON.stringify({
+                                    _token: '{{ csrf_token() }}',
+                                    candidates: formData,
+                                }),
+                                contentType: 'application/json',
+                                success: function(response) {
+                                    if (response.success) {
+                                        // console.log(response.results[0].response[0].combined_output);
+                                        // window.open(response.results[0].response[0].combined_output);
+                                        // alert('ID Card berhasil dicetak.');
+                                        $('#printIDcardModal').modal('hide');
+                                        columSelectTable.ajax.reload();
+                                    } else {
+                                        alert(
+                                            'Gagal mencetak ID Card. Silakan coba lagi.'
+                                        );
+                                    }
+                                },
+                                error: function(xhr, status, error) {
+                                    console.error('AJAX Error:', error);
+                                    console.log(xhr.responseText);
+                                    console.log(xhr.status);
+                                    alert(
+                                        'Terjadi kesalahan saat mencetak ID Card. Silakan coba lagi.'
+                                    );
+                                }
+                            });
+
+                            // Close modal after submission & clear table
+                            $('#printIDcardTable tbody').empty();
+                            $('#printIDcardModal').modal('hide');
+                            $('#ctpatCheckboxAll').prop('checked', false);
                         });
                     }
                 },
@@ -874,6 +892,7 @@
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
                     success: function(response) {
+                        console.log(response);
                         alert('Data berhasil diperbarui!');
                         $('#viewModal').modal('hide');
                         location.reload();
@@ -886,6 +905,4 @@
             }
         }
     </script>
-
-
 @endsection

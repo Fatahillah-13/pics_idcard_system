@@ -4,9 +4,12 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Candidate;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use App\Models\CandidatePict;
+use App\Models\IdCardTemplate;
 use Yajra\DataTables\DataTables;
+use Illuminate\Support\Facades\Http;
 
 class CandidateController extends Controller
 {
@@ -298,5 +301,117 @@ class CandidateController extends Controller
         }
 
         return response()->json(['success' => true]);
+    }
+
+    public function printIDCard(Request $request)
+    {
+        // Validasi input array kandidat
+        $request->validate([
+            'candidates' => 'required|array|min:1',
+            'candidates.*.employee_id' => 'required|string|max:255',
+            'candidates.*.name' => 'required|string|max:255',
+            'candidates.*.ctpat' => 'required|integer|min:0|max:1',
+        ]);
+
+        $validCandidates = [];
+        $skipped = [];
+        $card_template = '';
+
+        foreach ($request->candidates as $candidateData) {
+            $employee = Candidate::with('candidatepict')
+                ->where('employee_id', $candidateData['employee_id'])
+                ->first();
+
+            if (!$employee || !$employee->candidatepict) {
+                $skipped[] = [
+                    'employee_id' => $candidateData['employee_id'],
+                    'status' => 'failed',
+                    'reason' => 'Employee or photo not found'
+                ];
+                continue;
+            }
+
+            // check card template based on department, job level, and ctpat
+            if ($candidateData['ctpat'] == 1) {
+                if ($employee->job_level === 'Operator') {
+                    // ctpat == 1 dan joblevel operator → cari template untuk operator + ctpat
+                    $card_template = IdCardTemplate::where('joblevel', 'Operator')
+                        ->where('ctpat', 1)
+                        ->first();
+                } else {
+                    // ctpat == 1 dan bukan operator → cari berdasarkan departemen dan ctpat
+                    $card_template = IdCardTemplate::where('department', $employee->department)
+                        ->where('ctpat', 1)
+                        ->first();
+                }
+            } else {
+                if ($employee->job_level === 'Operator') {
+                    // ctpat != 1 dan joblevel operator → cari berdasarkan joblevel saja
+                    $card_template = IdCardTemplate::where('joblevel', 'Operator')
+                        ->where('ctpat', 0)
+                        ->first();
+                } elseif ($employee->job_level !== 'Operator') {
+                    // ctpat != 1 dan joblevel staff → cari berdasarkan joblevel saja
+                    $card_template = IdCardTemplate::where('joblevel', 'Staff')
+                        ->where('ctpat', 0)
+                        ->first();
+                } else {
+                    // fallback: tidak ditemukan
+                    $card_template = null;
+                }
+            }
+
+            $card_template_path = $card_template ? $card_template->image_path : null;
+
+
+            $validCandidates[] = [
+                'name' => $candidateData['name'],
+                'job_level' => $employee->job_level,
+                'department' => $employee->department,
+                'employee_id' => $employee->employee_id,
+                'photo_filename' => $employee->candidatepict->pict_name,
+                'card_template' => $card_template_path,
+                'ctpat' => $candidateData['ctpat'],
+            ];
+        }
+
+        if (empty($validCandidates)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada kandidat valid.',
+                'skipped' => $skipped
+            ], 400);
+        }
+
+        try {
+            Log::info('Mengirim batch kandidat ke Flask:', $validCandidates);
+
+            // Kirim semua kandidat dalam satu request
+            $response = Http::post('http://localhost:5000/print', $validCandidates);
+
+            Log::info('Respons dari Flask:', [
+                'http_status' => $response->status(),
+                'body' => $response->json()
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'generated_pdf' => $response->json()[0]['combined_output'] ?? null,
+                'total_printed' => $response->json()[0]['total_idcards'] ?? count($validCandidates),
+                'details' => $response->json(),
+                'skipped' => $skipped
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Gagal mengirim ke Flask:', [
+                'message' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat menghubungi server cetak.',
+                'error' => $e->getMessage(),
+                'skipped' => $skipped
+            ], 500);
+        }
     }
 }
