@@ -385,11 +385,15 @@
                                                     alt="user-image" class="wid-50 rounded-circle" />
                                             </div>
                                             <div class="flex-grow-1 mx-3">
-                                                <h5 class="mb-0">Carson Darrin</h5>
+                                                <h5 class="mb-0">{{auth()->user()->name}}</h5>
                                                 <a class="link-primary"
-                                                    href="mailto:carson.darrin@company.io">carson.darrin@company.io</a>
+                                                    href="mailto:{{auth()->user()->email}}">{{auth()->user()->email}}</a>
                                             </div>
-                                            <span class="badge bg-primary">PRO</span>
+                                            @php
+                                                $role = auth()->user()->role;
+                                                $roleName = $role == 1 ? 'admin' : ($role == 2 ? 'recruit' : ($role == 3 ? 'payroll' : ''));
+                                            @endphp
+                                            <span class="badge bg-primary">{{ $roleName }}</span>
                                         </div>
                                     </li>
                                     <li class="list-group-item">

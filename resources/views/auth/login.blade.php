@@ -12,7 +12,7 @@
                     <p class="mb-3">Don't have an Account? <a href="{{ route('register') }}"
                             class="link-primary ms-1">Create Account</a></p>
                 </div>
-                <form method="POST" action="{{ route('login') }}">
+                <form method="POST" action="{{ route('login.auth.test') }}">
                     @csrf
                     <div class="form-group mb-3">
                         <input type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="admin@phoenixcoded.com" required autocomplete="email" autofocus id="floatingInput" placeholder="Email Address">

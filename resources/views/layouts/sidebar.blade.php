@@ -58,7 +58,7 @@
                                             <i class="ph-duotone ph-lock-key"></i>
                                             <span>Lock Screen</span>
                                         </a></li>
-                                    <li><a class="pc-user-links" href="{{ route('logout') }}"
+                                    <li><a class="pc-user-links" href="{{ route('logout.auth.test') }}"
                                             onclick="event.preventDefault();
                                               document.getElementById('logout-form').submit();">
                                             <i class="ph-duotone ph-power"></i>
