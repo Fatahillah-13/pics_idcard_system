@@ -1,6 +1,6 @@
 @extends('layouts.main')
 
-@section('title', 'Home')
+@section('title', 'Users Management')
 @section('breadcrumb-item', 'Settings')
 
 @section('breadcrumb-item-active', 'Users')

@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('card_template', function (Blueprint $table) {
             $table->id();
-            $table->string('department');
-            $table->string('joblevel');
+            $table->json('department');
+            $table->json('joblevel');
             $table->string('ctpat');
             $table->string('image_path');
             $table->timestamps();

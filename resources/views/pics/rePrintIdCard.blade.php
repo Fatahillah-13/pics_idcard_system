@@ -1,6 +1,6 @@
 @extends('layouts.main')
 
-@section('title', 'Home')
+@section('title', 'Cetak Ulang')
 @section('breadcrumb-item', 'PICS Cetak Ulang')
 
 @section('breadcrumb-item-active', 'Cetak Ulang Kartu ID')
@@ -451,7 +451,8 @@
             order: [
                 [1, 'asc']
             ],
-            ajax: '{{ route('candidate.index') }}',
+            // ajax: '{{ route('candidate.index') }}',
+            ajax: '',
             columns: [{
                     data: null,
                     defaultContent: ''

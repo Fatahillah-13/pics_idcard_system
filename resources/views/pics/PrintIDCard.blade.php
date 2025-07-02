@@ -572,9 +572,9 @@
                                 contentType: 'application/json',
                                 success: function(response) {
                                     if (response.success) {
-                                        // console.log(response.results[0].response[0].combined_output);
-                                        // window.open(response.results[0].response[0].combined_output);
-                                        // alert('ID Card berhasil dicetak.');
+                                        // console.log(response.generated_pdf);
+                                        window.open(response.generated_pdf);
+                                        alert('ID Card berhasil dicetak.');
                                         $('#printIDcardModal').modal('hide');
                                         columSelectTable.ajax.reload();
                                     } else {

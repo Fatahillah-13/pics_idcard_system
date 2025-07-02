@@ -19,8 +19,10 @@ class SettingsController extends Controller
     public function uploadIdCardTemplate(Request $request)
     {
         $request->validate([
-            'job_level' => 'required|string|max:255',
-            'department' => 'required|string|max:255',
+            'job_level' => 'required|array',
+            'job_level.*' => 'string|max:255',
+            'department' => 'required|array',
+            'department.*' => 'string|max:255',
             'ctpat' => 'required|in:0,1',
             'image_path' => 'required|file|mimes:jpg,jpeg,png|max:2048',
         ]);
@@ -31,12 +33,24 @@ class SettingsController extends Controller
         $filePath = 'storage/idCardTemplate/' . $filename;
 
         $cardTemplate = new IdCardTemplate();
-        $cardTemplate->joblevel = $request->job_level;
-        $cardTemplate->department = $request->department;
+        $cardTemplate->joblevel = json_encode($request->job_level);
+        $cardTemplate->department = json_encode($request->department);
         $cardTemplate->ctpat = $request->ctpat;
         $cardTemplate->image_path = $filePath;
         $cardTemplate->save();
 
+        return response()->json(['success' => true]);
+    }
+
+    // Method to Delete ID Card Template
+    public function deleteIdCardTemplate($id)
+    {
+        $cardTemplate = IdCardTemplate::findOrFail($id);
+        $filePath = public_path($cardTemplate->image_path);
+        if (file_exists($filePath)) {
+            unlink($filePath); // Delete the file from storage
+        }
+        $cardTemplate->delete(); // Delete the record from the database
         return response()->json(['success' => true]);
     }
 

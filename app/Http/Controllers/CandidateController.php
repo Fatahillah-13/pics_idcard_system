@@ -400,34 +400,10 @@ class CandidateController extends Controller
             }
 
             // check card template based on department, job level, and ctpat
-            if ($candidateData['ctpat'] == 1) {
-                if ($employee->job_level === 'Operator') {
-                    // ctpat == 1 dan joblevel operator → cari template untuk operator + ctpat
-                    $card_template = IdCardTemplate::where('joblevel', 'Operator')
-                        ->where('ctpat', 1)
-                        ->first();
-                } else {
-                    // ctpat == 1 dan bukan operator → cari berdasarkan departemen dan ctpat
-                    $card_template = IdCardTemplate::where('department', $employee->department)
-                        ->where('ctpat', 1)
-                        ->first();
-                }
-            } else {
-                if ($employee->job_level === 'Operator') {
-                    // ctpat != 1 dan joblevel operator → cari berdasarkan joblevel saja
-                    $card_template = IdCardTemplate::where('joblevel', 'Operator')
-                        ->where('ctpat', 0)
-                        ->first();
-                } elseif ($employee->job_level !== 'Operator') {
-                    // ctpat != 1 dan joblevel staff → cari berdasarkan joblevel saja
-                    $card_template = IdCardTemplate::where('joblevel', 'Staff')
-                        ->where('ctpat', 0)
-                        ->first();
-                } else {
-                    // fallback: tidak ditemukan
-                    $card_template = null;
-                }
-            }
+            $card_template = IdCardTemplate::whereJsonContains('department', $employee->department)
+                ->whereJsonContains('joblevel', $employee->job_level)
+                ->where('ctpat', $candidateData['ctpat'])
+                ->first();
 
             $card_template_path = $card_template ? $card_template->image_path : null;
 

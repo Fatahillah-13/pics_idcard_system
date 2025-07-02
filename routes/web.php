@@ -79,6 +79,7 @@ Route::middleware(['auth'])->group(function () {
     // ID Card Template Route
     Route::get('/candidate/idcard', [SettingsController::class, 'showGallery'])->name('idcard.gallery');
     Route::post('/card-template/upload', [SettingsController::class, 'uploadIdCardTemplate'])->name('idcard.upload');
+    Route::delete('/card-template/delete/{id}', [SettingsController::class, 'deleteIdCardTemplate'])->name('idcard.delete');
 
     // Users routes
     Route::get('/users', [SettingsController::class, 'users'])->name('users.index');

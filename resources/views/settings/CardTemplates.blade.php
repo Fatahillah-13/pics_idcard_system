@@ -24,13 +24,13 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label" for="inputJobLevel">Pilih Level</label>
-                        <select class="form-control" name="inputJobLevel" id="inputJobLevel">
+                        <select class="form-control" name="inputJobLevel" id="inputJobLevel" multiple>
                             <option value="">Pilih Level Karyawan</option>
                         </select>
                     </div>
                     <div class="mb-3">
                         <label class="form-label" for="inputDepartment">Pilih Departemen</label>
-                        <select class="form-control" name="inputDepartment" id="inputDepartment">
+                        <select class="form-control" name="inputDepartment" id="inputDepartment" multiple>
                             <option value="">Pilih Departemen</option>
                         </select>
                     </div>
@@ -59,7 +59,7 @@
                                 <button class="btn my-1 btn-sm btn-light-primary active" data-filter="*">Show
                                     all</button>
                                 <button class="btn my-1 btn-sm btn-light-primary" data-filter=".ctpat">CTPAT</button>
-                                 <button class="btn my-1 btn-sm btn-light-primary" data-filter=".nonctpat">Non-CTPAT</button>
+                                <button class="btn my-1 btn-sm btn-light-primary" data-filter=".nonctpat">Non-CTPAT</button>
                                 <button class="btn my-1 btn-sm btn-light-primary" data-filter=".Operator">Operator</button>
                                 <button class="btn my-1 btn-sm btn-light-primary" data-filter=".Staff">Staff Up</button>
                             </div>
@@ -85,14 +85,16 @@
                                     <div class="gallery-hover-data card-body">
                                         <div class="position-relative text-end">
                                             <div class="form-check prod-likes d-inline-block">
-                                                <i data-feather="heart" class="prod-likes-icon"></i>
+                                                <i data-feather="trash" class="prod-likes-icon"
+                                                    onclick="deleteTemplate()"></i>
                                             </div>
                                         </div>
                                         <div class="d-flex align-items-center">
                                             <div class="flex-grow-1 mx-2 text-white">
-                                                <p class="mb-0 text-truncate w-100">{{ $template->joblevel }}</p>
-                                                <span
-                                                    class="mb-0 text-sm text-truncate w-100">{{ $template->department }} {{ $template->ctpat ? ' - CTPAT' : '' }}</span>
+                                                <p class="mb-0 text-truncate w-100">{{ $template->id }} -
+                                                    {{ $template->joblevel }}</p>
+                                                <span class="mb-0 text-sm text-truncate w-100">{{ $template->department }}
+                                                    {{ $template->ctpat ? ' - CTPAT' : '' }}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -117,8 +119,11 @@
         const inputDepartment = document.getElementById('inputDepartment');
 
         const departmentChoices = new Choices(inputDepartment, {
+            removeItemButton: true, // Enables the remove (×) button
             searchPlaceholderValue: 'Cari Departemen',
             shouldSort: false,
+            duplicateItemsAllowed: false,
+            maxItemCount: -1, // No limit on selected items
         });
 
         departmentChoices
@@ -137,8 +142,11 @@
         const inputJobLevel = document.getElementById('inputJobLevel');
 
         const jobLevelChoices = new Choices(inputJobLevel, {
-            searchPlaceholderValue: 'Cari Level Karyawan',
+            removeItemButton: true, // Enables the remove (×) button
+            searchPlaceholderValue: 'Cari Job Level',
             shouldSort: false,
+            duplicateItemsAllowed: false,
+            maxItemCount: -1, // No limit on selected items
         });
 
         jobLevelChoices
@@ -209,29 +217,33 @@
     <script>
         document.getElementById('saveTemplate').addEventListener('click', function() {
             const fileInput = document.getElementById('input-file');
-            const jobLevel = document.getElementById('inputJobLevel').value;
-            const department = document.getElementById('inputDepartment').value;
+            // Get selected options as array of values
+            const jobLevelSelect = document.getElementById('inputJobLevel');
+            const departmentSelect = document.getElementById('inputDepartment');
+            const jobLevels = Array.from(jobLevelSelect.selectedOptions).map(opt => opt.value).filter(v => v);
+            const departments = Array.from(departmentSelect.selectedOptions).map(opt => opt.value).filter(v => v);
             const ctpat = document.getElementById('CTPATcheckbox').checked ? 1 : 0;
 
             if (!fileInput.files.length) {
                 alert('File harus dipilih.');
                 return;
             }
-            if (!jobLevel) {
+            if (!jobLevels.length) {
                 alert('Level karyawan harus dipilih.');
                 return;
             }
-            if (!department) {
+            if (!departments.length) {
                 alert('Departemen harus dipilih.');
                 return;
             }
 
             const formData = new FormData();
             formData.append('image_path', fileInput.files[0]); // 'image_path' must match controller
-            formData.append('job_level', jobLevel);
-            formData.append('department', department);
+            // Append each value in the array
+            jobLevels.forEach(level => formData.append('job_level[]', level));
+            departments.forEach(dep => formData.append('department[]', dep));
             formData.append('ctpat', ctpat);
-
+            
             $.ajax({
                 url: '/card-template/upload',
                 type: 'POST',
@@ -239,12 +251,10 @@
                 processData: false,
                 contentType: false,
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
-                        'content')
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 },
                 success: function(data) {
-                    alert(data.success ? 'Template berhasil diupload!' : (data.message ||
-                        'Gagal upload template.'));
+                    alert(data.success ? 'Template berhasil diupload!' : (data.message || 'Gagal upload template.'));
                     if (data.success) location.reload();
                 },
                 error: function(xhr) {
@@ -253,5 +263,34 @@
                 }
             });
         });
+    </script>
+
+    {{-- Delete Function --}}
+    <script>
+        function deleteTemplate() {
+            if (confirm('Apakah Anda yakin ingin menghapus template ini?')) {
+                // Get the template ID from the data attribute
+                const templateId = event.target.closest('.element-item').querySelector('p.mb-0.text-truncate').textContent
+                    .split(' - ')[0].trim();
+
+                $.ajax({
+                    url: `/card-template/delete/${templateId}`,
+                    type: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                            'content')
+                    },
+                    success: function(data) {
+                        alert(data.success ? 'Template berhasil dihapus!' : (data.message ||
+                            'Gagal menghapus template.'));
+                        if (data.success) location.reload();
+                    },
+                    error: function(xhr) {
+                        alert('Terjadi kesalahan saat menghapus template.');
+                        console.error(xhr.responseText);
+                    }
+                });
+            }
+        }
     </script>
 @endsection
