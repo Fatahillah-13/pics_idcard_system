@@ -50,6 +50,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/candidate/addNIK', function () {
         return view('pics.PrintIDCard');
     });
+    Route::get('/reprint', function () {
+        return view('pics.rePrintIdCard');
+    });
 
     // Choices routes
     Route::get('/candidate/choices', [HomeController::class, 'candidatechoices']);
@@ -68,6 +71,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/candidate/update/{id}', [CandidateController::class, 'updatecandidate'])->name('candidate.update');
     Route::delete('/candidate/delete/{id}', [CandidateController::class, 'deletecandidate'])->name('candidate.delete');
     Route::post('/candidate/print', [CandidateController::class, 'printIDCard'])->name('candidate.printIDCard');
+    Route::post('/candidate/import', [CandidateController::class, 'importExcel'])->name('candidate.import');
 
     // Print ID Card Route
     Route::post('/candidate/print-idcard', [CandidateController::class, 'printIDCard'])->name('candidate.printIDCard');

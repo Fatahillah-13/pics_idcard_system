@@ -40,7 +40,7 @@
                 class="pc-mtext" data-i18n="PICS Cetak Ulang">PICS Cetak Ulang</span><span class="pc-arrow"><i
                     data-feather="chevron-right"></i></span></a>
         <ul class="pc-submenu">
-            <li class="pc-item"><a class="pc-link" href="/demo/layout-horizontal" data-i18n="Cetak Ulang">Cetak
+            <li class="pc-item"><a class="pc-link" href="/reprint" data-i18n="Cetak Ulang">Cetak
                     Ulang</a>
             </li>
         </ul>

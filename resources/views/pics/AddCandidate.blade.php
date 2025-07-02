@@ -133,6 +133,27 @@
             </div>
         </div>
     </div>
+    {{-- Modal Import Excel --}}
+    <div class="modal fade bd-example-modal-sm" id="importExcelModal" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title h4" id="mySmallModalLabel">Import Excel</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="{{ route('candidate.import') }}" method="POST" enctype="multipart/form-data">
+                        @csrf
+                        <div class="mb-3">
+                            <label for="importFile" class="form-label">Pilih File Excel</label>
+                            <input type="file" class="form-control" name="importFile" id="importFile" accept=".xlsx, .xls, .csv" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Import</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- [ Main Content ] start -->
     <div class="row">
         @if (session('success'))
@@ -267,6 +288,14 @@
 
                         // Open the modal to add NIK for selected candidates
                         $('#addCandidateModal').modal('show');
+                    }
+                },
+                {
+                    text: 'Import Excel',
+                    className: 'btn btn-success',
+                    action: function(e, dt, node, config) {
+                        // Open the import modal
+                        $('#importExcelModal').modal('show');
                     }
                 },
                 {
@@ -516,7 +545,7 @@
                     } else {
                         alert('Gagal memperbarui kandidat. Silakan coba lagi.');
                         console.log(response);
-                        
+
                     }
                 },
                 error: function(xhr, status, error) {

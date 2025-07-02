@@ -10,6 +10,7 @@ use App\Models\CandidatePict;
 use App\Models\IdCardTemplate;
 use Yajra\DataTables\DataTables;
 use Illuminate\Support\Facades\Http;
+use Maatwebsite\Excel\Facades\Excel;
 
 class CandidateController extends Controller
 {
@@ -76,6 +77,105 @@ class CandidateController extends Controller
         // Redirect back to the candidate page with a success message
         return redirect('/candidate/store')->with('success', 'Candidate added successfully.');
     }
+
+    // import excel file
+    public function importExcel(Request $request)
+    {
+        // Validate the request
+        $request->validate([
+            'importFile' => 'required|file|mimes:xlsx,xls,csv',
+        ]);
+
+        try {
+            // Handle the uploaded file
+            $file = $request->file('importFile');
+            $filePath = $file->storeAs('uploads', $file->getClientOriginalName(), 'public');
+
+            // Get the full storage path
+            $realPath = storage_path('app/public/' . $filePath);
+
+            // Load Excel data
+            $data = Excel::toArray([], $realPath);
+            $rows = $data[0]; // First sheet
+
+            $insertedCount = 0;
+
+            foreach ($rows as $index => $row) {
+                // Skip empty or header rows
+                if (!isset($row[1]) || strtolower(trim($row[1])) === 'nama lengkap') {
+                    continue;
+                }
+
+                // Parse birthdate
+                try {
+                    $birthdate = isset($row[5]) && !empty($row[5])
+                        ? \Carbon\Carbon::parse($row[5])
+                        : null;
+                } catch (\Exception $e) {
+                    $birthdate = null;
+                }
+
+                // Parse first working day
+                try {
+                    $firstWorkingDay = isset($row[6]) && !empty($row[6])
+                        ? \Carbon\Carbon::parse($row[6])
+                        : null;
+                } catch (\Exception $e) {
+                    $firstWorkingDay = null;
+                }
+
+                // Check for duplicates
+                $existingCandidate = Candidate::where('name', $row[1])
+                    ->where('birthdate', $birthdate)
+                    ->where('first_working_day', $firstWorkingDay)
+                    ->first();
+
+                if ($existingCandidate) {
+                    continue;
+                }
+
+                // Create and populate candidate
+                $candidate = new Candidate();
+                $candidate->name = $row[1] ?? null;
+                $candidate->job_level = $row[2] ?? null;
+                $candidate->department = $row[3] ?? null;
+                $candidate->birthplace = $row[4] ?? null;
+                $candidate->birthdate = $birthdate;
+                $candidate->first_working_day = $firstWorkingDay;
+                $candidate->save();
+
+                // Optional: Save pict number if provided
+                if (isset($row[7]) && is_numeric($row[7])) {
+                    $candidatePict = new CandidatePict();
+                    $candidatePict->pict_number = $row[7];
+                    $candidatePict->candidate_id = $candidate->id;
+                    $candidate->candidatepict()->save($candidatePict);
+                } else {
+                    // Get the highest pict_number in the database and increment by 1
+                    $maxPictNumber = CandidatePict::max('pict_number');
+                    $nextPictNumber = $maxPictNumber ? $maxPictNumber + 1 : 1;
+
+                    $candidatePict = new CandidatePict();
+                    $candidatePict->pict_number = $nextPictNumber;
+                    $candidatePict->candidate_id = $candidate->id;
+                    $candidate->candidatepict()->save($candidatePict);
+                }
+
+                $insertedCount++;
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => "$insertedCount candidates imported successfully.",
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while processing the file: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
 
     public function editcandidate($id)
     {
@@ -191,38 +291,6 @@ class CandidateController extends Controller
             'max_employee_id' => $maxID ?? 0
         ]);
     }
-
-    // public function updatecandidateNIK(Request $request)
-    // {
-    //     $candidates = $request->input('candidates');
-
-    //     if (!$candidates || !is_array($candidates)) {
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Invalid candidate data.'
-    //         ]);
-    //     }
-
-    //     try {
-    //         foreach ($candidates as $data) {
-    //             if (isset($data['id'], $data['employee_id'])) {
-    //                 Candidate::where('id', $data['id'])->update([
-    //                     'employee_id' => $data['employee_id']
-    //                 ]);
-    //             }
-    //         }
-
-    //         return response()->json([
-    //             'success' => true,
-    //             'message' => 'Employee IDs updated successfully.'
-    //         ]);
-    //     } catch (\Exception $e) {
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'An error occurred: ' . $e->getMessage()
-    //         ], 500);
-    //     }
-    // }
 
     public function updatecandidateNIK(Request $request)
     {
