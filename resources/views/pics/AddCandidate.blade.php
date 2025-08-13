@@ -62,8 +62,7 @@
                             </div>
                             <div class="mb-3 col-md-2">
                                 <label class="form-label" for="inputPictNumber">No. Foto</label>
-                                <input type="number" class="form-control" name="inputPictNumber" id="inputPictNumber"
-                                    value="{{ $nextPictNumber }}" />
+                                <input type="number" class="form-control" name="inputPictNumber" id="inputPictNumber"/>
                             </div>
                         </div>
                         <button type="submit" class="btn btn-primary">+ Tambahkan Kandidat</button>

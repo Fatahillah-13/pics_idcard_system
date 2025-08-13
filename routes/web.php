@@ -89,6 +89,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/users/update/{id}', [SettingsController::class, 'updateUsers'])->name('users.update');
     Route::delete('/users/delete/{id}', [SettingsController::class, 'deleteUsers'])->name('users.delete');
 
+    // printHistory routes
+    Route::get('/print-history', [SettingsController::class, 'showPrintHistory'])->name('printHistory');
+    Route::get('/print-history/data', [SettingsController::class, 'printHistory'])->name('printHistory.index');
+
     // Define a GET route with dynamic placeholders for route parameters
     // Route::get('{routeName}/{name?}', [HomeController::class, 'pageView'])->name('home.dynamic.view');
 });

@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\IdCardTemplate;
 use App\Models\User;
 use Illuminate\Http\Request;
+use App\Models\Candidate;
+use Yajra\DataTables\Facades\DataTables;
 
 class SettingsController extends Controller
 {
@@ -14,6 +16,22 @@ class SettingsController extends Controller
         $templates = IdCardTemplate::latest()->get(); // Get all uploaded templates
         return view('settings.CardTemplates', compact('templates'));
     }
+
+    public function showPrintHistory(){
+        //show the view
+        return view('settings.printHistory');
+
+    }
+
+    // method to show employee
+    public function printHistory()
+    {
+        // Logic to retrieve candidate data
+        $candidates = Candidate::whereHas('candidatepict', function ($query) {
+            $query->whereNotNull('pict_name');
+        })->where('isPrinted', 1)->with('candidatepict')->get();
+        return DataTables::of($candidates)->make(true);
+    } 
 
     // Method to Upload ID Card Template
     public function uploadIdCardTemplate(Request $request)

@@ -108,7 +108,7 @@
                             <div class="mb-3 col-md-6">
                                 <label class="form-label" for="inputPictNumber">No. Foto</label>
                                 <input type="number" class="form-control" name="inputPictNumber"
-                                    id="inputPictNumber" />
+                                    id="inputPictNumber" required />
                             </div>
                         </div>
                         <button type="button" id="btn-simpan" class="btn btn-primary">Simpan</button>
@@ -262,6 +262,12 @@
                 event.preventDefault(); // Prevent the default form submission
 
                 var id = $('#candidateIdDisplay').val();
+
+                // check if pict number is empty
+                if ($('#inputPictNumber').val() === '') {
+                    alert('Nomor Foto tidak boleh kosong!');
+                    return;
+                }
 
                 // Get the form data
                 var payload = {

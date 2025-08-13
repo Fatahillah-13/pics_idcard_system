@@ -1,9 +1,9 @@
 @extends('layouts.main')
 
-@section('title', 'Tambah NIK + Cetak ID Card')
-@section('breadcrumb-item', 'PICS Pegawai Baru')
+@section('title', 'Riwayat Cetak ID Card')
+@section('breadcrumb-item', 'Settings')
 
-@section('breadcrumb-item-active', 'Tambah NIK + Cetak ID Card')
+@section('breadcrumb-item-active', 'Riwayat Cetak ID Card Pegawai')
 
 @section('css')
     <link rel="stylesheet" href="{{ URL::asset('build/css/plugins/dataTables.bootstrap5.min.css') }}">
@@ -25,55 +25,6 @@
 @endsection
 
 @section('content')
-    {{-- Modal Add NIK --}}
-    <div class="modal fade bd-example-modal-lg" id="addCandidateNumberModal" tabindex="-1" role="dialog"
-        aria-labelledby="myLargeModalLabel">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title h4" id="myLargeModalLabel">Tambah NIK</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row g-4 mb-3">
-                        <div class="col-md-4">
-                            <div class="mb-0">
-                                <label class="form-label">Prefix</label>
-                                <input type="number" class="form-control" id="prefix" placeholder="Text" readonly>
-                            </div>
-                        </div>
-                        <div class="col-md-8">
-                            <div class="mb-0">
-                                <label class="form-label">Nomor Karyawan</label>
-                                <input type="number" class="form-control" id="employeeID" placeholder="Text">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-body table-border-style">
-                        <div class="table-responsive">
-                            <table class="table table-hover" id="addCandidateNumberTable">
-                                <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>NIK</th>
-                                        <th>Nama</th>
-                                        <th>TTL</th>
-                                        <th>Tanggal Masuk</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                    <button type="button" id="generateBtn" class="btn btn-primary">Simpan NIK</button>
-                </div>
-            </div>
-        </div>
-    </div>
     {{-- Modal Print --}}
     <div class="modal fade bd-example-modal-lg" id="printIDcardModal" tabindex="-1" role="dialog"
         aria-labelledby="myLargeModalLabel">
@@ -304,182 +255,7 @@
             scrollY: 600,
             scrollCollapse: true,
             scroller: true,
-            buttons: [{
-                    // Button to add NIK
-                    text: '+ Tambah NIK',
-                    action: function(e, dt, node, config) {
-                        const selectedData = dt.rows({
-                            selected: true
-                        }).data();
-                        let selectedIds = [];
-
-                        for (let i = 0; i < selectedData.length; i++) {
-                            selectedIds.push(selectedData[i].id); // assuming your row has an 'id' field
-                        }
-
-                        // alert when month & year of first_working_day is different
-                        if (selectedData.length > 1) {
-                            let firstDate = selectedData[0].first_working_day ? selectedData[0]
-                                .first_working_day.split('-') : [];
-                            let firstMonth = firstDate.length === 3 ? firstDate[1] : null;
-                            let firstYear = firstDate.length === 3 ? firstDate[0] : null;
-                            for (let i = 1; i < selectedData.length; i++) {
-                                let currDate = selectedData[i].first_working_day ? selectedData[i]
-                                    .first_working_day.split('-') : [];
-                                let currMonth = currDate.length === 3 ? currDate[1] : null;
-                                let currYear = currDate.length === 3 ? currDate[0] : null;
-                                if (currMonth !== firstMonth || currYear !== firstYear) {
-                                    alert(
-                                        'Perhatian: Bulan & tahun tanggal masuk berbeda untuk beberapa kandidat.'
-                                    );
-                                    $('#addCandidateNumberModal').modal('hide');
-                                    break;
-                                }
-                            }
-                        }
-
-                        // Open the modal to add NIK for selected candidates
-                        $('#addCandidateNumberModal').modal('show');
-                        // Fill the modal table body manually without DataTable
-                        let tbody = $('#addCandidateNumberTable tbody');
-                        tbody.empty();
-
-                        // Loop through selected data and append rows
-                        for (let i = 0; i < selectedData.length; i++) {
-                            let row = selectedData[i];
-                            let birthdate = row.birthdate ? row.birthdate.split('-') : [];
-                            let formattedDate = birthdate.length === 3 ?
-                                `${birthdate[2]}-${birthdate[1]}-${birthdate[0]}` : row.birthdate;
-                            let ttl = `${row.birthplace}, ${formattedDate}`;
-                            let firstWorkingDay = row.first_working_day ? row.first_working_day.split('-') :
-                                [];
-                            let formattedFirstWorkingDay = firstWorkingDay.length === 3 ?
-                                `${firstWorkingDay[2]}-${firstWorkingDay[1]}-${firstWorkingDay[0]}` : row
-                                .first_working_day;
-                            tbody.append(`
-                                <tr>
-                                    <td>${i + 1}</td>
-                                    <td>${row.employee_id || ''}</td>
-                                    <td>${row.name || ''}</td>
-                                    <td>${ttl}</td>
-                                    <td>${formattedFirstWorkingDay || ''}</td>
-                                </tr>
-                            `);
-                        }
-
-                        // Set the prefix based on first_working_day
-                        let prefix = '';
-                        if (selectedData.length > 0 && selectedData[0].first_working_day) {
-                            let parts = selectedData[0].first_working_day.split('-');
-                            if (parts.length === 3) {
-                                // parts[0] = yyyy, parts[1] = mm
-                                prefix = parts[0].slice(2, 4) + parts[1] + 0;
-                            }
-                        }
-                        $('#prefix').val(prefix);
-
-                        // set employeeID input based on database
-                        let employeeIDInput = $('#employeeID');
-                        let firstWorkingDay = selectedData.length > 0 ? selectedData[0].first_working_day :
-                            null;
-
-                        if (firstWorkingDay) {
-                            let parts = firstWorkingDay.split('-');
-                            if (parts.length === 3) {
-                                let year = parts[0];
-                                let month = parts[1];
-                                // AJAX request to get max employee_id for same month & year
-                                $.ajax({
-                                    url: '{{ route('candidate.maxEmployeeID') }}',
-                                    method: 'GET',
-                                    data: {
-                                        year: year,
-                                        month: month
-                                    },
-                                    success: function(response) {
-                                        // response.max_employee_id should be the max employee_id or 0 if none
-                                        // Ambil setelah digit ke-5, lalu tambah 1
-                                        let maxID = response.max_employee_id ? response
-                                            .max_employee_id.toString() : '';
-                                        let nextID = '';
-                                        if (maxID.length > 5) {
-                                            let lastDigits = maxID.substring(5);
-                                            nextID = (parseInt(lastDigits, 10) || 0) + 1;
-                                        } else {
-                                            nextID = 1;
-                                        }
-                                        employeeIDInput.val(nextID);
-                                    },
-                                    error: function() {
-                                        employeeIDInput.val('');
-                                    }
-                                });
-                            }
-                        }
-
-                        // Handle the generate button click
-                        $('#generateBtn').on('click', function() {
-                            let employeeID = $('#employeeID').val();
-                            let EmployeeNIK = $('#prefix').val() + employeeID;
-                            if (!employeeID) {
-                                alert('Mohon masukkan Nomor Karyawan.');
-                                return;
-                            }
-
-                            // Extract selected rows into plain array
-                            let rawData = columSelectTable.rows({
-                                selected: true
-                            }).data().toArray();
-
-                            // Create new array with updated employee_id
-                            // let selectedData = rawData.map((item, index) => ({
-                            //     id: item.id,
-                            //     employee_id: $('#prefix').val() + employeeID,
-                            // }));
-
-                            let startID = parseInt(employeeID, 10);
-
-                            let selectedData = rawData.map((item, index) => {
-                                let newID = startID + index;
-                                let paddedID = newID.toString().padStart(employeeID.length,
-                                    '0');
-                                return {
-                                    id: item.id,
-                                    employee_id: $('#prefix').val() + paddedID
-                                };
-                            });
-
-
-                            $.ajax({
-                                url: '{{ route('candidate.updateEmployeeID') }}',
-                                method: 'POST',
-                                data: JSON.stringify({
-                                    _token: '{{ csrf_token() }}',
-                                    candidates: selectedData,
-                                }),
-                                contentType: 'application/json',
-                                success: function(response) {
-                                    if (response.success) {
-                                        columSelectTable.ajax.reload();
-                                    } else {
-                                        alert(
-                                            'Gagal menyimpan NIK. Silakan coba lagi.'
-                                        );
-                                    }
-                                },
-                                error: function(xhr, status, error) {
-                                    console.error('AJAX Error:', error);
-                                    alert(
-                                        'Terjadi kesalahan saat menyimpan NIK. Silakan coba lagi.'
-                                    );
-                                }
-                            });
-
-                            $('#addCandidateNumberModal').modal('hide');
-                            columSelectTable.ajax.reload();
-                        });
-                    }
-                },
+            buttons: [
                 {
                     // Button to print ID Card
                     text: 'Cetak ID Card',
@@ -681,7 +457,7 @@
             order: [
                 [1, 'asc']
             ],
-            ajax: '{{ route('candidate.index') }}',
+            ajax: '{{ route('printHistory.index') }}',
             columns: [{
                     data: null,
                     defaultContent: ''

@@ -60,8 +60,6 @@
                                     all</button>
                                 <button class="btn my-1 btn-sm btn-light-primary" data-filter=".ctpat">CTPAT</button>
                                 <button class="btn my-1 btn-sm btn-light-primary" data-filter=".nonctpat">Non-CTPAT</button>
-                                <button class="btn my-1 btn-sm btn-light-primary" data-filter=".Operator">Operator</button>
-                                <button class="btn my-1 btn-sm btn-light-primary" data-filter=".Staff">Staff Up</button>
                             </div>
                         </div>
                         <div class="col-auto">

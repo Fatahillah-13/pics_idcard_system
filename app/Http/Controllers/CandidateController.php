@@ -37,7 +37,7 @@ class CandidateController extends Controller
         // Logic to retrieve candidate data
         $candidates = Candidate::whereHas('candidatepict', function ($query) {
             $query->whereNotNull('pict_name');
-        })->with('candidatepict')->get();
+        })->where('isPrinted', 0)->with('candidatepict')->get();
         return DataTables::of($candidates)->make(true);
     }
 
@@ -108,18 +108,26 @@ class CandidateController extends Controller
 
                 // Parse birthdate
                 try {
-                    $birthdate = isset($row[5]) && !empty($row[5])
-                        ? \Carbon\Carbon::parse($row[5])
-                        : null;
+                    if (isset($row[5]) && !empty($row[5])) {
+                        $birthdate = is_numeric($row[5])
+                            ? \Carbon\Carbon::createFromDate(1900, 1, 1)->addDays($row[5] - 2)
+                            : \Carbon\Carbon::parse($row[5]);
+                    } else {
+                        $birthdate = null;
+                    }
                 } catch (\Exception $e) {
                     $birthdate = null;
                 }
 
                 // Parse first working day
                 try {
-                    $firstWorkingDay = isset($row[6]) && !empty($row[6])
-                        ? \Carbon\Carbon::parse($row[6])
-                        : null;
+                    if (isset($row[6]) && !empty($row[6])) {
+                        $firstWorkingDay = is_numeric($row[6])
+                            ? \Carbon\Carbon::createFromDate(1900, 1, 1)->addDays($row[6] - 2)
+                            : \Carbon\Carbon::parse($row[6]);
+                    } else {
+                        $firstWorkingDay = null;
+                    }
                 } catch (\Exception $e) {
                     $firstWorkingDay = null;
                 }
@@ -151,12 +159,9 @@ class CandidateController extends Controller
                     $candidatePict->candidate_id = $candidate->id;
                     $candidate->candidatepict()->save($candidatePict);
                 } else {
-                    // Get the highest pict_number in the database and increment by 1
-                    $maxPictNumber = CandidatePict::max('pict_number');
-                    $nextPictNumber = $maxPictNumber ? $maxPictNumber + 1 : 1;
-
+                    // If no pict number is provided, pict_number is null
                     $candidatePict = new CandidatePict();
-                    $candidatePict->pict_number = $nextPictNumber;
+                    $candidatePict->pict_number = null;
                     $candidatePict->candidate_id = $candidate->id;
                     $candidate->candidatepict()->save($candidatePict);
                 }
@@ -176,12 +181,12 @@ class CandidateController extends Controller
         }
     }
 
-
     public function editcandidate($id)
     {
         $candidate = Candidate::findOrFail($id);
         return response()->json([
             'name' => $candidate->name,
+            'employee_id' => $candidate->employee_id,
             'birthplace' => $candidate->birthplace,
             'job_level' => $candidate->job_level,
             'department' => $candidate->department,
@@ -201,6 +206,7 @@ class CandidateController extends Controller
 
         // Logic to update candidate data
         $request->validate([
+            'employee_id' => 'nullable|string|max:255',
             'name' => 'nullable|string|max:255',
             'birthPlace' => 'nullable|string|max:255',
             'birthDate' => 'nullable|date',
@@ -212,6 +218,7 @@ class CandidateController extends Controller
         // Find the candidate by ID and update the data
         $candidate = Candidate::findOrFail($id);
         $candidate->update([
+            'employee_id' => $request->employee_id,
             'name' => $request->name,
             'birthplace' => $request->birthPlace,
             'birthdate' => $request->birthDate,
@@ -361,7 +368,7 @@ class CandidateController extends Controller
             if ($candidate) {
                 // Delete candidate picture if it exists
                 if ($candidate->candidatepict && $candidate->candidatepict->pict_name) {
-                    Storage::delete($candidate->candidatepict->pict_name);
+                    // Storage::delete($candidate->candidatepict->pict_name);
                     $candidate->candidatepict->delete();
                 }
                 $candidate->delete();
@@ -407,7 +414,6 @@ class CandidateController extends Controller
 
             $card_template_path = $card_template ? $card_template->image_path : null;
 
-
             $validCandidates[] = [
                 'name' => $candidateData['name'],
                 'job_level' => $employee->job_level,
@@ -431,18 +437,28 @@ class CandidateController extends Controller
             Log::info('Mengirim batch kandidat ke Flask:', $validCandidates);
 
             // Kirim semua kandidat dalam satu request
-            $response = Http::post('http://localhost:5000/print', $validCandidates);
+            $response = Http::post('http://10.10.100.193:5000/print', $validCandidates);
+
+            $responseData = $response->json();
 
             Log::info('Respons dari Flask:', [
                 'http_status' => $response->status(),
-                'body' => $response->json()
+                'body' => $responseData
             ]);
+
+            //Update hanya kandidat yang berhasil dicetak
+            foreach ($responseData as $result) {
+                if (isset($result['employee_id']) && $result['status'] === 'success') {
+                    Candidate::where('employee_id', $result['employee_id'])
+                        ->update(['isPrinted' => 1]);
+                }
+            }
 
             return response()->json([
                 'success' => true,
-                'generated_pdf' => $response->json()[0]['combined_output'] ?? null,
-                'total_printed' => $response->json()[0]['total_idcards'] ?? count($validCandidates),
-                'details' => $response->json(),
+                'generated_pdf' => $responseData[0]['combined_output'] ?? null,
+                'total_printed' => $responseData[0]['total_idcards'] ?? count($validCandidates),
+                'details' => $responseData,
                 'skipped' => $skipped
             ]);
         } catch (\Exception $e) {

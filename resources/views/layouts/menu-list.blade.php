@@ -68,4 +68,12 @@
             <span class="pc-mtext" data-i18n="Users">Users</span>
         </a>
     </li>
+    <li class="pc-item">
+        <a href="/print-history" class="pc-link">
+            <span class="pc-micon">
+                <i class="ph-duotone ph-files"></i>
+            </span>
+            <span class="pc-mtext" data-i18n="Riwayat Cetak">Riwayat Cetak</span>
+        </a>
+    </li>
 @endif
