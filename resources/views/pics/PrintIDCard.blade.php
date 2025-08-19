@@ -665,9 +665,8 @@
                             });
                         }
                     }
-                }
-
-
+                },
+                
             ],
             columnDefs: [{
                 orderable: false,

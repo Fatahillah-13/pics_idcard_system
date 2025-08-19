@@ -47,11 +47,13 @@
     </li>
 @endif
 
-@if (auth()->user()->role == 1)
+@if (auth()->user()->role == 1 || auth()->user()->role == 3)
     <li class="pc-item pc-caption">
         <label data-i18n="Settings">Settings</label>
         <i class="ph-duotone ph-gauge"></i>
     </li>
+@endif
+@if (auth()->user()->role == 1)
     <li class="pc-item">
         <a href="/candidate/idcard" class="pc-link">
             <span class="pc-micon">
@@ -60,6 +62,8 @@
             <span class="pc-mtext" data-i18n="Template ID Card">Template ID Card</span>
         </a>
     </li>
+@endif
+@if (auth()->user()->role == 1)
     <li class="pc-item">
         <a href="/users" class="pc-link">
             <span class="pc-micon">
@@ -68,6 +72,8 @@
             <span class="pc-mtext" data-i18n="Users">Users</span>
         </a>
     </li>
+@endif
+@if (auth()->user()->role == 1 || auth()->user()->role == 3)
     <li class="pc-item">
         <a href="/print-history" class="pc-link">
             <span class="pc-micon">
