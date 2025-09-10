@@ -6,6 +6,7 @@
 @section('breadcrumb-item-active', 'Ambil Foto')
 
 @section('css')
+    <link rel="stylesheet" href="{{ URL::asset('build/css/plugins/uppy.min.css') }}">
 @endsection
 
 @section('content')
@@ -24,16 +25,17 @@
                         <div class="md-3 col-mb-6 col-xl-6">
                             <h5>Ambil Foto</h5>
                         </div>
-                        <div class="md-3 col-mb-6 col-xl-6">
+                        {{-- <div class="md-3 col-mb-6 col-xl-6">
                             <div class="form-check form-switch custom-switch-v1 form-check-inline float-end">
                                 <input type="checkbox" class="form-check-input input-primary" id="customCheckinl1" />
                                 <label class="form-check-label" for="customCheckinl1">Hidupkan Kamera</label>
                             </div>
-                        </div>
+                        </div> --}}
                     </div>
                 </div>
                 <div class="card-body">
-                    <div class="col-xl-12" id="myDiv">
+                    <div class="pc-uppy" id="pc-uppy-1"> </div>
+                    {{-- <div class="col-xl-12" id="myDiv">
                         <div id="my_camera" class="mb-3 col-md-6">
                             <img src="{{ asset('assets/img/picture_icon2.png') }}" alt="picture" srcset=""
                                 height="300px" width="400px">
@@ -46,7 +48,7 @@
                             <button type="button" class="btn btn-secondary d-inline-flex" onclick="take_snapshot()"><i
                                     class="ti ti-camera me-1"></i>Ambil Gambar</button>
                         </div>
-                    </div>
+                    </div> --}}
                 </div>
             </div>
         </div>
@@ -102,13 +104,13 @@
                         <div class="row">
                             <div class="mb-3 col-md-6">
                                 <label class="form-label" for="inputFirstWorkDay">Tanggal Masuk</label>
-                                <input type="date" class="form-control" name="inputFirstWorkDay"
-                                    id="inputFirstWorkDay" required />
+                                <input type="date" class="form-control" name="inputFirstWorkDay" id="inputFirstWorkDay"
+                                    required />
                             </div>
                             <div class="mb-3 col-md-6">
                                 <label class="form-label" for="inputPictNumber">No. Foto</label>
-                                <input type="number" class="form-control" name="inputPictNumber"
-                                    id="inputPictNumber" required />
+                                <input type="number" class="form-control" name="inputPictNumber" id="inputPictNumber"
+                                    required />
                             </div>
                         </div>
                         <button type="button" id="btn-simpan" class="btn btn-primary">Simpan</button>
@@ -124,6 +126,7 @@
 @section('scripts')
     <script src="{{ URL::asset('build/js/plugins/choices.min.js') }}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/webcamjs/1.0.26/webcam.min.js"></script>
+    <script src="{{ URL::asset('build/js/plugins/uppy.min.js') }}"></script>
     {{-- Department Choices JS --}}
     <script>
         const inputDepartment = document.getElementById('inputDepartment');
@@ -282,7 +285,7 @@
                 };
 
                 console.log('Payload:', payload);
-                
+
 
                 // Send the data using AJAX
                 $.ajax({
@@ -307,5 +310,71 @@
                  */
             });
         });
+    </script>
+    {{-- UppyJS --}}
+    <script type="module">
+        import {
+            Uppy,
+            Dashboard,
+            Webcam,
+            Tus,
+            ThumbnailGenerator,
+            ImageEditor
+        } from 'https://releases.transloadit.com/uppy/v3.23.0/uppy.min.mjs';
+
+        const uppy1 = new Uppy({
+                debug: true,
+                autoProceed: false
+            })
+            .use(Dashboard, {
+                target: '#pc-uppy-1',
+                inline: true,
+                showProgressDetails: true,
+                hideUploadButton: true,
+                videoConstraints: {
+                    width: {
+                        min: 640,
+                        ideal: 1920,
+                        max: 1920
+                    },
+                    height: {
+                        min: 360,
+                        ideal: 1080,
+                        max: 1080
+                    },
+                },
+            })
+            .use(Webcam, {
+                target: Dashboard,
+                showVideoSourceDropdown: true
+            })
+            .use(ImageEditor, {
+                target: Dashboard, // attach editor into the Dashboard UI
+                quality: 0.8,
+                cropperOptions: {
+                    viewMode: 1,
+                    aspectRatio: NaN, // NaN = free crop; set number for locked aspect ratio
+                    background: false,
+                    autoCropArea: 1
+                },
+                // actions — toggle what the editor UI shows
+                actions: {
+                    revert: true,
+                    rotate: true,
+                    granularRotate: true,
+                    flip: true,
+                    zoomIn: true,
+                    zoomOut: true,
+                    cropSquare: true,
+                    cropWidescreen: true,
+                    cropWidescreenVertical: true
+                }
+            })
+            .use(Tus, {
+                endpoint: 'https://tusd.tusdemo.net/files/'
+            })
+            .use(ThumbnailGenerator);
+        // Bikin global biar bisa dipakai di script biasa
+        window.uppy1 = uppy1;
     </script>
 @endsection

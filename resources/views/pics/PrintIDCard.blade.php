@@ -666,7 +666,7 @@
                         }
                     }
                 },
-                
+
             ],
             columnDefs: [{
                 orderable: false,
@@ -770,7 +770,8 @@
             Dashboard,
             Webcam,
             Tus,
-            ThumbnailGenerator
+            ThumbnailGenerator,
+            ImageEditor
         } from 'https://releases.transloadit.com/uppy/v3.23.0/uppy.min.mjs';
 
         const uppy1 = new Uppy({
@@ -798,6 +799,28 @@
             .use(Webcam, {
                 target: Dashboard,
                 showVideoSourceDropdown: true
+            })
+            .use(ImageEditor, {
+                target: Dashboard, // attach editor into the Dashboard UI
+                quality: 0.8,
+                cropperOptions: {
+                    viewMode: 1,
+                    aspectRatio: NaN, // NaN = free crop; set number for locked aspect ratio
+                    background: false,
+                    autoCropArea: 1
+                },
+                // actions — toggle what the editor UI shows
+                actions: {
+                    revert: true,
+                    rotate: true,
+                    granularRotate: true,
+                    flip: true,
+                    zoomIn: true,
+                    zoomOut: true,
+                    cropSquare: true,
+                    cropWidescreen: true,
+                    cropWidescreenVertical: true
+                }
             })
             .use(Tus, {
                 endpoint: 'https://tusd.tusdemo.net/files/'
