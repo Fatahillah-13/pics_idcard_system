@@ -217,7 +217,7 @@
             });
     </script>
     {{-- WebcamJS --}}
-    <script>
+    {{-- <script>
         // Configure a few settings and attach camera
         Webcam.set({
             width: 400,
@@ -256,61 +256,7 @@
                 document.getElementById('buttonShutter').style.display = 'none';
             }
         });
-    </script>
-    {{-- Update Logic --}}
-    <script>
-        $(document).ready(function() {
-            // $('#CandidateUpdateForm').on('submit', function(event) {
-            $('#btn-simpan').on('click', function(event) {
-                event.preventDefault(); // Prevent the default form submission
-
-                var id = $('#candidateIdDisplay').val();
-
-                // check if pict number is empty
-                if ($('#inputPictNumber').val() === '') {
-                    alert('Nomor Foto tidak boleh kosong!');
-                    return;
-                }
-
-                // Get the form data
-                var payload = {
-                    name: $('#inputName').val(),
-                    birthDate: $('#inputBirthDate').val(),
-                    birthPlace: $('#inputBirthPlace').val(),
-                    jobLevel: $('#inputJobLevel').val(),
-                    department: $('#inputDepartment').val(),
-                    firstWorkDay: $('#inputFirstWorkDay').val(),
-                    pictNumber: $('#inputPictNumber').val(),
-                    imagePath: $('#imagePath').val(), // Data URI from the preview
-                };
-
-                console.log('Payload:', payload);
-
-
-                // Send the data using AJAX
-                $.ajax({
-                    url: '/candidate/update/' + id,
-                    type: 'POST',
-                    data: payload,
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    },
-                    success: function(response) {
-                        // Handle success response
-                        alert(response.message || 'Data berhasil disimpan!');
-
-                    },
-                    error: function(xhr, status, error) {
-                        // Handle error response
-                        console.log('Error saving data:', error, status);
-                        alert('Error saving data. Please try again.');
-                    }
-                });
-                /*
-                 */
-            });
-        });
-    </script>
+    </script> --}}
     {{-- UppyJS --}}
     <script type="module">
         import {
@@ -376,5 +322,71 @@
             .use(ThumbnailGenerator);
         // Bikin global biar bisa dipakai di script biasa
         window.uppy1 = uppy1;
+    </script>
+    {{-- Update Logic --}}
+    <script>
+        $(document).ready(function() {
+            $('#btn-simpan').on('click', function(event) {
+                event.preventDefault(); // cegah submit form default
+                const uppyFiles = uppy1.getFiles();
+                const file = uppyFiles[0] ? uppyFiles[0].data : null;
+
+                console.log('Uppy Files:', uppyFiles);
+                console.log('Selected File:', file);
+
+                if (!file) {
+                    alert('Silakan unggah atau ambil foto terlebih dahulu!');
+                    return;
+                }
+
+                // cek kalau pict number kosong
+                if ($('#inputPictNumber').val() === '') {
+                    alert('Nomor Foto tidak boleh kosong!');
+                    return;
+                }
+
+                var id = $('#candidateIdDisplay').val();
+                const reader = new FileReader();
+
+                reader.onloadend = function() {
+                    const base64data = reader.result;
+                    $('#imagePath').val(base64data); // simpan ke input hidden
+
+                    // siapkan payload setelah file selesai dibaca
+                    var payload = {
+                        name: $('#inputName').val(),
+                        birthDate: $('#inputBirthDate').val(),
+                        birthPlace: $('#inputBirthPlace').val(),
+                        jobLevel: $('#inputJobLevel').val(),
+                        department: $('#inputDepartment').val(),
+                        firstWorkDay: $('#inputFirstWorkDay').val(),
+                        pictNumber: $('#inputPictNumber').val(),
+                        imagePath: $('#imagePath').val(), // sudah pasti ada isinya
+                    };
+
+                    console.log('Payload:', payload);
+
+                    // kirim via AJAX
+                    $.ajax({
+                        url: '/candidate/update/' + id,
+                        type: 'POST',
+                        data: payload,
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        success: function(response) {
+                            alert(response.message || 'Data berhasil disimpan!');
+                        },
+                        error: function(xhr, status, error) {
+                            console.log('Error saving data:', error, status);
+                            alert('Error saving data. Please try again.');
+                        }
+                    });
+                };
+
+                // mulai baca file (asynchronous)
+                reader.readAsDataURL(file);
+            });
+        });
     </script>
 @endsection

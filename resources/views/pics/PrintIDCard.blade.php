@@ -852,7 +852,7 @@
                     $('#inputFirstWorkDay').val(data.first_working_day);
                     $('#inputPictNumber').val(data.candidatepict.pict_number || '');
 
-                    // ===== Add olld picture to uppy interface =====
+                    // ===== Add old picture to uppy interface =====
                     if (data.candidatepict && data.candidatepict.image_url) {
                         fetch(data.candidatepict.image_url)
                             .then(res => res.blob())
