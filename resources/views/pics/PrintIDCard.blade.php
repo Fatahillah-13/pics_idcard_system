@@ -467,11 +467,17 @@
                                         );
                                     }
                                 },
-                                error: function(xhr, status, error) {
-                                    console.error('AJAX Error:', error);
-                                    alert(
-                                        'Terjadi kesalahan saat menyimpan NIK. Silakan coba lagi.'
-                                    );
+                                error: function(xhr) {
+                                    if (xhr.responseJSON) {
+                                        let message = xhr.responseJSON.message;
+                                        let duplicates = xhr.responseJSON.duplicates;
+
+                                        // tampilkan pesan
+                                        alert(message);
+                                        
+                                    } else {
+                                        alert("Terjadi error tak terduga.");
+                                    }
                                 }
                             });
 

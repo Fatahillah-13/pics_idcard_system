@@ -331,9 +331,6 @@
                 const uppyFiles = uppy1.getFiles();
                 const file = uppyFiles[0] ? uppyFiles[0].data : null;
 
-                console.log('Uppy Files:', uppyFiles);
-                console.log('Selected File:', file);
-
                 if (!file) {
                     alert('Silakan unggah atau ambil foto terlebih dahulu!');
                     return;
@@ -364,8 +361,6 @@
                         imagePath: $('#imagePath').val(), // sudah pasti ada isinya
                     };
 
-                    console.log('Payload:', payload);
-
                     // kirim via AJAX
                     $.ajax({
                         url: '/candidate/update/' + id,
@@ -378,7 +373,6 @@
                             alert(response.message || 'Data berhasil disimpan!');
                         },
                         error: function(xhr, status, error) {
-                            console.log('Error saving data:', error, status);
                             alert('Error saving data. Please try again.');
                         }
                     });
