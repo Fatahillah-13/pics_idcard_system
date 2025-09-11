@@ -936,7 +936,7 @@
                         success: function(response) {
                             alert('Data berhasil diperbarui!');
                             $('#viewModal').modal('hide');
-                            location.reload();
+                            $('#colum-select').DataTable().ajax.reload(null, false);
                         },
                         error: function(err) {
                             alert('Gagal memperbarui data.');
@@ -960,7 +960,7 @@
                         console.log(response);
                         alert('Data berhasil diperbarui!');
                         $('#viewModal').modal('hide');
-                        location.reload();
+                        $('#colum-select').DataTable().ajax.reload(null, false);
                     },
                     error: function(err) {
                         alert('Gagal memperbarui data.');
