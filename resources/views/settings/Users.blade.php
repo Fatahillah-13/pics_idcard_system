@@ -245,7 +245,13 @@
                     data: 'email'
                 },
                 {
-                    data: 'role'
+                    data: 'role',
+                    render: function(data, type, row) {
+                        if (data == 1) return 'Admin';
+                        if (data == 2) return 'Rekrutmen';
+                        if (data == 3) return 'Payrol';
+                        return data;
+                    }
                 },
                 {
                     data: null,

@@ -216,47 +216,6 @@
 
             });
     </script>
-    {{-- WebcamJS --}}
-    {{-- <script>
-        // Configure a few settings and attach camera
-        Webcam.set({
-            width: 400,
-            height: 300,
-            fps: 60,
-            image_format: 'jpeg',
-            jpeg_quality: 90,
-        });
-
-
-        // A function to handle the snapshot and display it in the preview div
-        function take_snapshot() {
-            Webcam.snap(function(data_uri) {
-                // Show the preview
-                document.getElementById('preview').src = data_uri;
-                document.getElementById('preview').style.display = 'block';
-                document.getElementById('preview').innerHTML = '<img src="' + data_uri + '"/>';
-
-                // Simpan data URI ke dalam input hidden
-                document.getElementById('imagePath').value = data_uri; // Menyimpan data URI ke input hidden
-
-            });
-        }
-
-        // Add event listener to the checkbox
-        document.getElementById('customCheckinl1').addEventListener('change', function() {
-            if (this.checked) {
-                Webcam.attach('#my_camera');
-                // unhide the shutter button
-                document.getElementById('buttonShutter').style.display = 'block';
-            } else {
-                Webcam.reset();
-                document.getElementById('my_camera').innerHTML =
-                    '<img src="{{ asset('assets/img/picture_icon2.png') }}" alt="picture" srcset="" height="300px" width="400px">';
-                // unhide the shutter button
-                document.getElementById('buttonShutter').style.display = 'none';
-            }
-        });
-    </script> --}}
     {{-- UppyJS --}}
     <script type="module">
         import {
@@ -265,7 +224,7 @@
             Webcam,
             Tus,
             ThumbnailGenerator,
-            ImageEditor
+            ImageEditor,
         } from 'https://releases.transloadit.com/uppy/v3.23.0/uppy.min.mjs';
 
         const uppy1 = new Uppy({
