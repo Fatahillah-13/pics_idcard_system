@@ -169,15 +169,9 @@ class CandidateController extends Controller
                 $insertedCount++;
             }
 
-            return response()->json([
-                'success' => true,
-                'message' => "$insertedCount candidates imported successfully.",
-            ]);
+            return redirect()->back()->with('success', "$insertedCount candidates imported successfully.");
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'An error occurred while processing the file: ' . $e->getMessage(),
-            ], 500);
+            return redirect()->back()->with('error', 'An error occurred while processing the file: ' . $e->getMessage());
         }
     }
 

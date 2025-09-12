@@ -62,7 +62,7 @@
                             </div>
                             <div class="mb-3 col-md-2">
                                 <label class="form-label" for="inputPictNumber">No. Foto</label>
-                                <input type="number" class="form-control" name="inputPictNumber" id="inputPictNumber"/>
+                                <input type="number" class="form-control" name="inputPictNumber" id="inputPictNumber" />
                             </div>
                         </div>
                         <button type="submit" class="btn btn-primary">+ Tambahkan Kandidat</button>
@@ -133,7 +133,8 @@
         </div>
     </div>
     {{-- Modal Import Excel --}}
-    <div class="modal fade bd-example-modal-sm" id="importExcelModal" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+    <div class="modal fade bd-example-modal-sm" id="importExcelModal" tabindex="-1" role="dialog"
+        aria-labelledby="mySmallModalLabel">
         <div class="modal-dialog modal-sm">
             <div class="modal-content">
                 <div class="modal-header">
@@ -141,12 +142,19 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
+                    @if (session('success'))
+                        <div class="alert alert-success">
+                            {{ session('success') }}
+                        </div>
+                    @endif
                     <form action="{{ route('candidate.import') }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         <div class="mb-3">
                             <label for="importFile" class="form-label">Pilih File Excel</label>
-                            <input type="file" class="form-control" name="importFile" id="importFile" accept=".xlsx, .xls, .csv" required>
+                            <input type="file" class="form-control" name="importFile" id="importFile"
+                                accept=".xlsx, .xls, .csv" required>
                         </div>
+                        <a href="{{ asset('assets/doc/TemplateImport.xlsx') }}" class="btn btn-link">Download Template</a>
                         <button type="submit" class="btn btn-primary">Import</button>
                     </form>
                 </div>
