@@ -72,6 +72,7 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/candidate/delete/{id}', [CandidateController::class, 'deletecandidate'])->name('candidate.delete');
     Route::post('/candidate/print', [CandidateController::class, 'printIDCard'])->name('candidate.printIDCard');
     Route::post('/candidate/import', [CandidateController::class, 'importExcel'])->name('candidate.import');
+    Route::post('/candidate/export', [CandidateController::class, 'exportExcel'])->name('candidate.export');
 
     // Print ID Card Route
     Route::post('/candidate/print-idcard', [CandidateController::class, 'printIDCard'])->name('candidate.printIDCard');

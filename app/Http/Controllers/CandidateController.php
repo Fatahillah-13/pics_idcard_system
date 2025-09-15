@@ -175,6 +175,91 @@ class CandidateController extends Controller
         }
     }
 
+    // Export to excel
+    public function exportExcel(Request $request)
+    {
+        $candidateIds = $request->input('candidate_ids', []);
+
+        if (empty($candidateIds)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada kandidat yang dipilih.'
+            ], 400);
+        }
+
+        // get candidates sesuai request (hanya yang dipilih, punya foto, dan belum dicetak)
+        $candidates = Candidate::whereIn('id', $candidateIds)
+            ->whereHas('candidatepict', function ($query) {
+                $query->whereNotNull('pict_name');
+            })
+            ->where('isPrinted', 0)
+            ->with('candidatepict')
+            ->get();
+
+        if ($candidates->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data kandidat tidak ditemukan atau tidak memenuhi syarat export.'
+            ], 404);
+        }
+
+        $exportData = [];
+        // add header
+        $exportData[] = [
+            'NIK',
+            'Nama Lengkap',
+            'Jabatan',
+            'Departemen',
+            'Tempat Lahir',
+            'Tanggal Lahir',
+            'Tanggal Masuk',
+            'Nomor Foto',
+        ];
+
+        foreach ($candidates as $candidate) {
+            $exportData[] = [
+                $candidate->employee_id,
+                $candidate->name,
+                $candidate->job_level,
+                $candidate->department,
+                $candidate->birthplace,
+                $candidate->birthdate,
+                $candidate->first_working_day,
+                $candidate->candidatepict->pict_number ?? '',
+            ];
+        }
+
+        $fileName = 'candidates_export_' . date('Ymd_His') . '.xlsx';
+        $filePath = 'exports/' . $fileName;
+
+        // Define a simple export class on the fly
+        $export = new class($exportData) implements \Maatwebsite\Excel\Concerns\FromArray {
+            protected $data;
+            public function __construct(array $data)
+            {
+                $this->data = $data;
+            }
+            public function array(): array
+            {
+                return $this->data;
+            }
+        };
+
+        // simpan ke storage/public/exports
+        Excel::store(
+            $export,
+            $filePath,
+            'public'
+        );
+
+        return response()->json([
+            'success' => true,
+            'file_url' => Storage::url($filePath),
+            'message' => 'Export berhasil.'
+        ]);
+    }
+
+
     public function editcandidate($id)
     {
         $candidate = Candidate::findOrFail($id);

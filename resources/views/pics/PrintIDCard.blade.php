@@ -474,7 +474,7 @@
 
                                         // tampilkan pesan
                                         alert(message);
-                                        
+
                                     } else {
                                         alert("Terjadi error tak terduga.");
                                     }
@@ -672,6 +672,47 @@
                         }
                     }
                 },
+                {
+                    text: 'Export Data',
+                    className: 'btn btn-secondary',
+                    action: function(e, dt, node, config) {
+                        const selectedData = dt.rows({
+                            selected: true
+                        }).data();
+                        const selectedIds = selectedData.toArray().map(row => row.id);
+
+                        if (selectedIds.length === 0) {
+                            alert('Tidak ada kandidat yang dipilih untuk diexport.');
+                            return;
+                        }
+
+                        if (!confirm('Apakah Anda yakin ingin mengekspor data kandidat terpilih?')) {
+                            return;
+                        }
+
+                        $.ajax({
+                            url: '{{ route('candidate.export') }}',
+                            method: 'POST',
+                            data: JSON.stringify({
+                                _token: '{{ csrf_token() }}',
+                                candidate_ids: selectedIds,
+                            }),
+                            contentType: 'application/json',
+                            success: function(response) {
+                                if (response.success && response.file_url) {
+                                    window.location.href = response.file_url;
+                                } else {
+                                    alert('Gagal mengekspor data kandidat. Silakan coba lagi.');
+                                }
+                            },
+                            error: function(xhr, status, error) {
+                                console.error(error);
+                                alert('Terjadi kesalahan pada server. Coba lagi nanti.');
+                            }
+                        });
+                    }
+                }
+
 
             ],
             columnDefs: [{
