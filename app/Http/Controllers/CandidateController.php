@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use App\Models\Candidate;
 use Illuminate\Support\Facades\Log;
@@ -425,6 +426,46 @@ class CandidateController extends Controller
                 }
             }
 
+            // 4. Ubah Filename gambar menjadi employee_id
+            // Ambil semua kandidat dengan pict (id + employee_id sudah ada di $candidates)
+            $ids = collect($candidates)->pluck('id');
+
+            // Load semua kandidat + relasinya sekali saja
+            $candidateModels = Candidate::with('candidatepict')
+                ->whereIn('id', $ids)
+                ->get()
+                ->keyBy('id'); // supaya bisa akses cepat by id
+
+            foreach ($candidates as $data) {
+                if (!isset($data['id'], $data['employee_id'])) {
+                    continue;
+                }
+
+                $candidate = $candidateModels->get($data['id']);
+                if (!$candidate || !$candidate->candidatepict || !$candidate->candidatepict->pict_name) {
+                    continue;
+                }
+
+                $oldPict = $candidate->candidatepict;
+                $extension = pathinfo($oldPict->pict_name, PATHINFO_EXTENSION);
+                $oldPath = $oldPict->pict_name;
+                $newPath = $data['employee_id'] . '.' . $extension;
+
+                if (Storage::disk('public')->exists($oldPath)) {
+                    // Hindari overwrite
+                    if (Storage::disk('public')->exists($newPath)) {
+                        $newPath = $data['employee_id'] . '_' . uniqid() . '.' . $extension;
+                    }
+
+                    DB::transaction(function () use ($oldPict, $oldPath, $newPath) {
+                        Storage::disk('public')->move($oldPath, $newPath);
+                        $oldPict->pict_name = basename($newPath);
+                        $oldPict->save();
+                    });
+                }
+            }
+
+            // 5. Kembalikan response sukses
             return response()->json([
                 'success' => true,
                 'message' => 'Employee IDs updated successfully.'
@@ -436,7 +477,6 @@ class CandidateController extends Controller
             ], 500);
         }
     }
-
 
     public function deletecandidate($ids)
     {
