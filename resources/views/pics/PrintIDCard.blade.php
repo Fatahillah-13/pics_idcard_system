@@ -967,11 +967,6 @@
 
                     formData.append('imagePath', base64Data);
 
-                    // Debug form data
-                    for (let pair of formData.entries()) {
-                        console.log(pair[0] + ':', pair[1]);
-                    }
-
                     // Kirim AJAX setelah base64 siap
                     $.ajax({
                         url: `/candidate/update/${id}`,
@@ -1006,7 +1001,6 @@
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
                     success: function(response) {
-                        console.log(response);
                         alert('Data berhasil diperbarui!');
                         $('#viewModal').modal('hide');
                         $('#colum-select').DataTable().ajax.reload(null, false);
