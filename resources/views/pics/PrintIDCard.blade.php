@@ -672,6 +672,7 @@
                         }
                     }
                 },
+                @if (auth()->user()->role == 1)
                 {
                     text: 'Export Data',
                     className: 'btn btn-secondary',
@@ -690,30 +691,37 @@
                             return;
                         }
 
+                        node.disabled = true;
+
                         $.ajax({
                             url: '{{ route('candidate.export') }}',
                             method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
                             data: JSON.stringify({
-                                _token: '{{ csrf_token() }}',
                                 candidate_ids: selectedIds,
                             }),
                             contentType: 'application/json',
                             success: function(response) {
                                 if (response.success && response.file_url) {
-                                    window.location.href = response.file_url;
+                                    window.open(response.file_url);
                                 } else {
                                     alert('Gagal mengekspor data kandidat. Silakan coba lagi.');
                                 }
                             },
-                            error: function(xhr, status, error) {
-                                console.error(error);
-                                alert('Terjadi kesalahan pada server. Coba lagi nanti.');
+                            error: function(xhr) {
+                                let msg = xhr.responseJSON?.message ||
+                                    'Terjadi kesalahan pada server. Coba lagi nanti.';
+                                alert(msg);
+                            },
+                            complete: function() {
+                                node.disabled = false;
                             }
                         });
                     }
                 }
-
-
+                @endif
             ],
             columnDefs: [{
                 orderable: false,
