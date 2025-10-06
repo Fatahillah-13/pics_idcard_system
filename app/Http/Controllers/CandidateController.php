@@ -436,6 +436,7 @@ class CandidateController extends Controller
                 ->get()
                 ->keyBy('id'); // supaya bisa akses cepat by id
 
+            /*
             foreach ($candidates as $data) {
                 if (!isset($data['id'], $data['employee_id'])) {
                     continue;
@@ -462,6 +463,41 @@ class CandidateController extends Controller
                         $oldPict->pict_name = basename($newPath);
                         $oldPict->save();
                     });
+                }
+            }
+            */
+
+            //Update Foto Idcard
+            foreach ($candidates as $data) {
+
+                // Check JOIN dulu ke candidatepict
+                $check_join = DB::table('candidates')
+                    ->join('candidatespict', 'candidates.id', '=', 'candidatespict.candidate_id')
+                    ->select('candidatespict.pict_name')
+                    ->where('candidates.id', $data['id']);
+                    
+
+                if ($check_join->count() > 0) {
+
+                    $oldPict = $check_join->first();                  
+                    // get file and rename file     
+                    $oldPath = $oldPict->pict_name;
+                    $file = Storage::get($oldPath);
+                    $extension = pathinfo($oldPict->pict_name, PATHINFO_EXTENSION);
+                    $oldPath = $oldPict->pict_name;
+                    $newPath = $data['employee_id'] . '.' . $extension;
+                    // rename file
+                    // Storage::disk('public')->move($oldPath, $newPath);
+                    rename(public_path('storage/' . $oldPath), public_path('storage/' . $newPath));
+
+
+
+                    //Update Database
+                    CandidatePict::where('candidate_id', $data['id'])->update([
+                        'pict_name' => $data['employee_id']. '.' . $extension
+                    ]);
+                } else {
+                    continue;
                 }
             }
 

@@ -449,7 +449,8 @@
                                 };
                             });
 
-
+                            // console.log('Data to be sent:', selectedData);
+                            
                             $.ajax({
                                 url: '{{ route('candidate.updateEmployeeID') }}',
                                 method: 'POST',
@@ -459,6 +460,7 @@
                                 }),
                                 contentType: 'application/json',
                                 success: function(response) {
+                                    console.log('Response from server:', response);
                                     if (response.success) {
                                         columSelectTable.ajax.reload();
                                     } else {
@@ -473,13 +475,15 @@
                                         let duplicates = xhr.responseJSON.duplicates;
 
                                         // tampilkan pesan
-                                        alert(message);
-
+                                        // alert(message);
+                                        console.log('Response from server:', message);
                                     } else {
-                                        alert("Terjadi error tak terduga.");
+                                        console.log('Response from server:', xhr.responseText);
+                                        // alert("Terjadi error tak terduga.");
                                     }
                                 }
                             });
+                            
 
                             $('#addCandidateNumberModal').modal('hide');
                             columSelectTable.ajax.reload();
@@ -960,6 +964,8 @@
             const uppyFiles = uppy1.getFiles();
             if (uppyFiles.length > 0) {
                 const file = uppyFiles[0].data;
+
+                // console.log('File to be uploaded:', file);
 
                 const reader = new FileReader();
                 reader.onload = function(e) {
