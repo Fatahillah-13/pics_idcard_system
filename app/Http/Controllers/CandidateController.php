@@ -328,7 +328,9 @@ class CandidateController extends Controller
                     return response()->json(['message' => 'Gagal mendekode gambar.'], 400);
                 } else {
                     // Membuat nama file yang unik
-                    $filename = 'pic_' . time() . '.' . $type; // Menggunakan timestamp sebagai nama file
+                    $filename = $candidate->employee_id
+                        ? $candidate->employee_id . '.' . $type
+                        : 'pic_' . time() . '.' . $type;
                     $filePath = public_path('storage/' . $filename); // Path untuk menyimpan file
                     // Menyimpan gambar ke public/storage
                     if (file_put_contents($filePath, $data) === false) {
