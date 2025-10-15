@@ -65,8 +65,7 @@
                         <div class="col-auto">
                             <ul class="list-inline d-flex align-items-center ms-auto my-1">
                                 <li class="list-inline-item align-bottom">
-                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                                        data-bs-target="#exampleModalLive">+ Tambah Template</button>
+                                    <a href="/card-template/add" class="btn btn-success">+ Tambah Template</a>
                                 </li>
                             </ul>
                         </div>
@@ -241,28 +240,29 @@
             jobLevels.forEach(level => formData.append('job_level[]', level));
             departments.forEach(dep => formData.append('department[]', dep));
             formData.append('ctpat', ctpat);
-            
-            $.ajax({
-                url: '/card-template/upload',
-                type: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                success: function(data) {
-                    alert(data.success ? 'Template berhasil diupload!' : (data.message || 'Gagal upload template.'));
-                    if (data.success) location.reload();
-                },
-                error: function(xhr) {
-                    alert('Terjadi kesalahan saat upload.');
-                    console.error(xhr.responseText);
-                }
-            });
+
+            // $.ajax({
+            //     url: '/card-template/upload',
+            //     type: 'POST',
+            //     data: formData,
+            //     processData: false,
+            //     contentType: false,
+            //     headers: {
+            //         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+            //             'content')
+            //     },
+            //     success: function(data) {
+            //         alert(data.success ? 'Template berhasil diupload!' : (data.message ||
+            //             'Gagal upload template.'));
+            //         if (data.success) location.reload();
+            //     },
+            //     error: function(xhr) {
+            //         alert('Terjadi kesalahan saat upload.');
+            //         console.error(xhr.responseText);
+            //     }
+            // });
         });
     </script>
-
     {{-- Delete Function --}}
     <script>
         function deleteTemplate() {

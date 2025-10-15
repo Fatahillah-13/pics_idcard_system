@@ -60,6 +60,14 @@ class SettingsController extends Controller
         return response()->json(['success' => true]);
     }
 
+    // Method to Show Add ID Card Template Form
+    public function addIdCardTemplate()
+    {
+        $departments = \App\Models\Department::all();
+        $joblevels = \App\Models\JobLevel::all();
+        return view('settings.AddTemplate', compact('departments', 'joblevels'));
+    }
+
     // Method to Delete ID Card Template
     public function deleteIdCardTemplate($id)
     {
