@@ -84,6 +84,8 @@
                                             <div class="form-check prod-likes d-inline-block">
                                                 <i data-feather="trash" class="prod-likes-icon"
                                                     onclick="deleteTemplate()"></i>
+                                                <i data-feather="trash" class="prod-likes-icon"
+                                                    onclick="editTemplate()"></i>
                                             </div>
                                         </div>
                                         <div class="d-flex align-items-center">
@@ -289,6 +291,14 @@
                     }
                 });
             }
+        }
+    </script>
+    {{-- Edit Function --}}
+    <script>
+        function editTemplate() {
+            const templateId = event.target.closest('.element-item').querySelector('p.mb-0.text-truncate').textContent
+                .split(' - ')[0].trim();
+            window.location.href = `/edit-template/${templateId}`;
         }
     </script>
 @endsection

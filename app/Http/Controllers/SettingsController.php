@@ -68,6 +68,28 @@ class SettingsController extends Controller
         return view('settings.AddTemplate', compact('departments', 'joblevels'));
     }
 
+    // Method to Show Edit ID Card Template Form
+    public function editIdCardTemplate($id)
+    {
+        $cardTemplate = IdCardTemplate::findOrFail($id);
+        $departments = \App\Models\Department::all();
+        $joblevels = \App\Models\JobLevel::all();
+
+        // For API/AJAX
+        if (request()->wantsJson()) {
+            return response()->json([
+                'id' => $cardTemplate->id,
+                'department' => json_decode($cardTemplate->department),
+                'joblevel' => json_decode($cardTemplate->joblevel),
+                'ctpat' => $cardTemplate->ctpat,
+                'image_path' => $cardTemplate->image_path,
+            ]);
+        }
+
+        // For web view
+        return view('settings.EditTemplate', compact('cardTemplate', 'departments', 'joblevels'));
+    }
+
     // Method to Delete ID Card Template
     public function deleteIdCardTemplate($id)
     {
