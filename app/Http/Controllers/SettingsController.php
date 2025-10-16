@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\IdCardTemplate;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use App\Models\Candidate;
+use App\Models\Department;
+use App\Models\JobLevel;
 use Yajra\DataTables\Facades\DataTables;
 
 class SettingsController extends Controller
@@ -17,10 +20,10 @@ class SettingsController extends Controller
         return view('settings.CardTemplates', compact('templates'));
     }
 
-    public function showPrintHistory(){
+    public function showPrintHistory()
+    {
         //show the view
         return view('settings.printHistory');
-
     }
 
     // method to show employee
@@ -31,7 +34,7 @@ class SettingsController extends Controller
             $query->whereNotNull('pict_name');
         })->where('isPrinted', 1)->with('candidatepict')->get();
         return DataTables::of($candidates)->make(true);
-    } 
+    }
 
     // Method to Upload ID Card Template
     public function uploadIdCardTemplate(Request $request)
@@ -72,22 +75,55 @@ class SettingsController extends Controller
     public function editIdCardTemplate($id)
     {
         $cardTemplate = IdCardTemplate::findOrFail($id);
-        $departments = \App\Models\Department::all();
-        $joblevels = \App\Models\JobLevel::all();
+        $selectedDepartments = json_decode($cardTemplate->department, true) ?: [];
+        $selectedJoblevels = json_decode($cardTemplate->joblevel, true) ?: [];
 
-        // For API/AJAX
-        if (request()->wantsJson()) {
-            return response()->json([
-                'id' => $cardTemplate->id,
-                'department' => json_decode($cardTemplate->department),
-                'joblevel' => json_decode($cardTemplate->joblevel),
-                'ctpat' => $cardTemplate->ctpat,
-                'image_path' => $cardTemplate->image_path,
-            ]);
+        // Ambil semua data referensi dari tabel departemen & job level
+        $allDepartments = Department::all();
+        $allJoblevels = JobLevel::all();
+
+        return view('settings.EditTemplate', [
+            'cardTemplate' => $cardTemplate,
+            'departments' => $allDepartments,
+            'joblevels' => $allJoblevels,
+            'selectedDepartments' => $selectedDepartments,
+            'selectedJoblevels' => $selectedJoblevels,
+        ]);
+    }
+
+    // Method to Update ID Card Template
+    public function updateIdCardTemplate(Request $request, $id)
+    {
+        $request->validate([
+            'job_level' => 'nullable|array',
+            'job_level.*' => 'string|max:255',
+            'department' => 'nullable|array',
+            'department.*' => 'string|max:255',
+            'ctpat' => 'nullable|in:0,1',
+            'image_path' => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
+        ]);
+
+        $cardTemplate = IdCardTemplate::findOrFail($id);
+
+        $cardTemplate->joblevel = $request->job_level ? json_encode($request->job_level) : null;
+        $cardTemplate->department = $request->department ? json_encode($request->department) : null;
+        $cardTemplate->ctpat = $request->ctpat;
+
+        if ($request->hasFile('image_path')) {
+            // Delete old image if exists
+            if ($cardTemplate->image_path && file_exists(public_path($cardTemplate->image_path))) {
+                unlink(public_path($cardTemplate->image_path));
+            }
+
+            $file = $request->file('image_path');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $file->storeAs('idCardTemplate', $filename, 'public');
+            $cardTemplate->image_path = 'storage/idCardTemplate/' . $filename;
         }
 
-        // For web view
-        return view('settings.EditTemplate', compact('cardTemplate', 'departments', 'joblevels'));
+        $cardTemplate->save();
+
+        return response()->json(['success' => true,]);
     }
 
     // Method to Delete ID Card Template
@@ -174,5 +210,4 @@ class SettingsController extends Controller
         $user->delete();
         return response()->json(['success' => true]);
     }
-
 }

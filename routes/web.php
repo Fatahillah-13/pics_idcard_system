@@ -81,7 +81,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/candidate/idcard', [SettingsController::class, 'showGallery'])->name('idcard.gallery');
     Route::get('/card-template/add', [SettingsController::class, 'addIdCardTemplate'])->name('idcard.add');
     Route::post('/card-template/upload', [SettingsController::class, 'uploadIdCardTemplate'])->name('idcard.upload');
-    Route::get('/edit-template/{id}', [SettingsController::class, 'editIdCardTemplate'])->name('idcard.edit');
+    Route::get('/edit-template/{id}', [SettingsController::class, 'editIdCardTemplate'])->name('edit.template');
+    Route::post('/card-template/update/{id}', [SettingsController::class, 'updateIdCardTemplate'])->name('idcard.update');
     Route::delete('/card-template/delete/{id}', [SettingsController::class, 'deleteIdCardTemplate'])->name('idcard.delete');
 
     // Users routes

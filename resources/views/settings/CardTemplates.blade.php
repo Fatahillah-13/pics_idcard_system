@@ -84,8 +84,8 @@
                                             <div class="form-check prod-likes d-inline-block">
                                                 <i data-feather="trash" class="prod-likes-icon"
                                                     onclick="deleteTemplate()"></i>
-                                                <i data-feather="trash" class="prod-likes-icon"
-                                                    onclick="editTemplate()"></i>
+                                                <i data-feather="edit-3" class="prod-likes-icon"
+                                                    onclick="editTemplate(event)"></i>
                                             </div>
                                         </div>
                                         <div class="d-flex align-items-center">
@@ -295,9 +295,12 @@
     </script>
     {{-- Edit Function --}}
     <script>
-        function editTemplate() {
-            const templateId = event.target.closest('.element-item').querySelector('p.mb-0.text-truncate').textContent
-                .split(' - ')[0].trim();
+        function editTemplate(event) {
+            const templateId = event.target.closest('.element-item')
+                .querySelector('p.mb-0.text-truncate')
+                .textContent.split(' - ')[0].trim();
+
+            // Langsung redirect ke halaman edit
             window.location.href = `/edit-template/${templateId}`;
         }
     </script>
