@@ -393,7 +393,6 @@
                             // Close modal after submission & clear table
                             $('#printIDcardTable tbody').empty();
                             $('#printIDcardModal').modal('hide');
-                            location.reload();
                         });
                     }
                 },
