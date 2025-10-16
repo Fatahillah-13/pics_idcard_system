@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SettingsController;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 
 use App\Http\Controllers\Auth\LoginTestController;
 
@@ -22,13 +23,13 @@ use App\Http\Controllers\Auth\LoginTestController;
 
 Auth::routes();
 
-    Route::get('/login-test', function () {
-        return view('auth.login');
-    });
+Route::get('/login-test', function () {
+    return view('auth.login');
+});
 
-    Route::get('/logout-test', [LoginTestController::class, 'logout'])->name('logout.auth.test');
+Route::get('/logout-test', [LoginTestController::class, 'logout'])->name('logout.auth.test');
 
-    Route::post('/auth/login-test', [LoginTestController::class, 'authenticate'])->name('login.auth.test');
+Route::post('/auth/login-test', [LoginTestController::class, 'authenticate'])->name('login.auth.test');
 
 
 // Define a group of routes with 'auth' middleware applied
@@ -96,6 +97,19 @@ Route::middleware(['auth'])->group(function () {
     // printHistory routes
     Route::get('/print-history', [SettingsController::class, 'showPrintHistory'])->name('printHistory');
     Route::get('/print-history/data', [SettingsController::class, 'printHistory'])->name('printHistory.index');
+
+    // Copy_API python routes
+    Route::get('/admin-page', [SettingsController::class, 'adminControl']);
+    Route::post('/copy-files', function () {
+        $response = Http::post('http://localhost:5000/copy-files');
+
+        if ($response->successful()) {
+            $data = $response->json();
+            return back()->with('success', "File berhasil disalin ({$data['copied']} disalin, {$data['skipped']} dilewati). Log: {$data['log_file']}");
+        } else {
+            return back()->with('error', 'Gagal menjalankan proses copy.');
+        }
+    });
 
     // Define a GET route with dynamic placeholders for route parameters
     // Route::get('{routeName}/{name?}', [HomeController::class, 'pageView'])->name('home.dynamic.view');

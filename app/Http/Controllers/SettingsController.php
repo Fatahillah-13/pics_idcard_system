@@ -210,4 +210,10 @@ class SettingsController extends Controller
         $user->delete();
         return response()->json(['success' => true]);
     }
+
+    // Method to show admin control page
+    public function adminControl()
+    {
+        return view('settings.AdminControl');
+    }
 }
