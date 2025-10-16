@@ -627,7 +627,7 @@
                             // Close modal after submission & clear table
                             $('#printIDcardTable tbody').empty();
                             $('#printIDcardModal').modal('hide');
-                            $('#ctpatCheckboxAll').prop('checked', false);
+                            location.reload();
                         });
                     }
                 },
