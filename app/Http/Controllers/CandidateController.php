@@ -193,7 +193,6 @@ class CandidateController extends Controller
             ->whereHas('candidatepict', function ($query) {
                 $query->whereNotNull('pict_name');
             })
-            ->where('isPrinted', 0)
             ->with('candidatepict')
             ->get();
 
