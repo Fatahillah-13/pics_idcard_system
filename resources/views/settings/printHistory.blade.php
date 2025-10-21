@@ -96,8 +96,8 @@
                                 </div>
                                 <div class="mb-3 col-md-6">
                                     <label class="form-label" for="inputBirthPlace">Tempat Lahir</label>
-                                    <input type="text" class="form-control" name="inputBirthPlace"
-                                        id="inputBirthPlace" placeholder="Tempat Lahir" required />
+                                    <input type="text" class="form-control" name="inputBirthPlace" id="inputBirthPlace"
+                                        placeholder="Tempat Lahir" required />
                                 </div>
                             </div>
                             <div class="row">
@@ -255,8 +255,7 @@
             scrollY: 600,
             scrollCollapse: true,
             scroller: true,
-            buttons: [
-                {
+            buttons: [{
                     // Button to print ID Card
                     text: 'Cetak ID Card',
                     className: 'btn btn-success',
@@ -440,8 +439,58 @@
                             });
                         }
                     }
-                }
+                },
+                @if (auth()->user()->role == 1)
+                    {
+                        text: 'Export Data',
+                        className: 'btn btn-secondary',
+                        action: function(e, dt, node, config) {
+                            const selectedData = dt.rows({
+                                selected: true
+                            }).data();
+                            const selectedIds = selectedData.toArray().map(row => row.id);
 
+                            if (selectedIds.length === 0) {
+                                alert('Tidak ada kandidat yang dipilih untuk diexport.');
+                                return;
+                            }
+
+                            if (!confirm('Apakah Anda yakin ingin mengekspor data kandidat terpilih?')) {
+                                return;
+                            }
+
+                            node.disabled = true;
+
+                            $.ajax({
+                                url: '{{ route('candidate.export') }}',
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                },
+                                data: JSON.stringify({
+                                    candidate_ids: selectedIds,
+                                }),
+                                contentType: 'application/json',
+                                success: function(response) {
+                                    if (response.success && response.file_url) {
+                                        window.open(response.file_url);
+                                    } else {
+                                        alert(
+                                            'Gagal mengekspor data kandidat. Silakan coba lagi.');
+                                    }
+                                },
+                                error: function(xhr) {
+                                    let msg = xhr.responseJSON?.message ||
+                                        'Terjadi kesalahan pada server. Coba lagi nanti.';
+                                    alert(msg);
+                                },
+                                complete: function() {
+                                    node.disabled = false;
+                                }
+                            });
+                        }
+                    }
+                @endif
 
             ],
             columnDefs: [{

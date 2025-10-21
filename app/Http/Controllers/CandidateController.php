@@ -321,7 +321,7 @@ class CandidateController extends Controller
             // pass the request to updatecandidatepict function
             if (preg_match('/^data:image\/(\w+);base64,/', $dataUri, $type)) {
                 $dataUri = substr($dataUri, strpos($dataUri, ',') + 1);
-                $type = strtolower($type[1]); // Mengambil tipe gambar (jpeg, png, dll)                
+                $type = (strtolower($type[1]) === 'jpeg') ? 'JPG' : strtolower($type[1]); // use 'jpg' for jpeg
                 // Decode base64
                 $data = base64_decode($dataUri, true);
                 if ($data === false) {
