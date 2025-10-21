@@ -101,7 +101,7 @@ Route::middleware(['auth'])->group(function () {
     // Copy_API python routes
     Route::get('/admin-page', [SettingsController::class, 'adminControl']);
     Route::post('/copy-files', function () {
-        $response = Http::post('http://localhost:5000/copy-files');
+        $response = Http::post('http://127.0.0.2:6000/copy-files');
 
         if ($response->successful()) {
             $data = $response->json();
