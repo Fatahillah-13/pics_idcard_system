@@ -6,7 +6,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SettingsController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
-
+use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\Auth\LoginTestController;
 
 /*
@@ -97,6 +97,10 @@ Route::middleware(['auth'])->group(function () {
     // printHistory routes
     Route::get('/print-history', [SettingsController::class, 'showPrintHistory'])->name('printHistory');
     Route::get('/print-history/data', [SettingsController::class, 'printHistory'])->name('printHistory.index');
+
+    // Activity Log routes
+    Route::get('/activity-logs', [ActivityLogController::class, 'index'])
+        ->name('activity-logs.index');
 
     // Copy_API python routes
     Route::get('/admin-page', [SettingsController::class, 'adminControl']);

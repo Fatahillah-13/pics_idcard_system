@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
-
+use App\Helpers\ActivityLogger;
 use App\Http\Controllers\Auth\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -23,18 +23,26 @@ class LoginTestController extends Controller
     |
     */
 
-        public function authenticate(Request $request)
+    public function authenticate(Request $request)
     {
-        
+
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required'],
         ]);
-        
+
 
         if (Auth::attempt($credentials)) {
             // dd(1);
             $request->session()->regenerate();
+
+            ActivityLogger::log(
+                'login',
+                'auth',
+                Auth::id(),
+                'User login'
+            );
+
             return redirect()->intended('/candidate/addNIK');
         }
 
@@ -49,7 +57,13 @@ class LoginTestController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
+        ActivityLogger::log(
+            'logout',
+            'auth',
+            Auth::id(),
+            'User logout'
+        );
+
         return redirect('/login-test');
     }
 }
-

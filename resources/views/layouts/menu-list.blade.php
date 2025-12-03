@@ -92,4 +92,12 @@
             <span class="pc-mtext" data-i18n="Riwayat Cetak">Riwayat Cetak</span>
         </a>
     </li>
+    <li class="pc-item">
+        <a href="/activity-logs" class="pc-link">
+            <span class="pc-micon">
+                <i class="ph-duotone ph-files"></i>
+            </span>
+            <span class="pc-mtext" data-i18n="Log Activity">Log Activity</span>
+        </a>
+    </li>
 @endif

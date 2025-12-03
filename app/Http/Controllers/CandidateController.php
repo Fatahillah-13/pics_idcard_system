@@ -12,6 +12,7 @@ use App\Models\IdCardTemplate;
 use Yajra\DataTables\DataTables;
 use Illuminate\Support\Facades\Http;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Helpers\ActivityLogger;
 
 class CandidateController extends Controller
 {
@@ -74,6 +75,14 @@ class CandidateController extends Controller
             $candidatePict->pict_number = $request->inputPictNumber;
             $candidatePict->save();
         }
+
+        ActivityLogger::log(
+            'create',
+            'idcard',
+            $candidate->id,
+            'Menambah Data Kandidat: ' . $candidate->name
+        );
+
 
         // Redirect back to the candidate page with a success message
         return redirect('/candidate/store')->with('success', 'Candidate added successfully.');
@@ -348,6 +357,14 @@ class CandidateController extends Controller
                         ]);
                     }
                 }
+
+                ActivityLogger::log(
+                    'update',
+                    'candidate',
+                    $candidate->id,
+                    'Mengupdate data candidate (dengan foto) untuk: ' . ($candidate->employee_id ?? $candidate->name)
+                );
+
                 $new_candidates = CandidatePict::get();
                 return response()->json($new_candidates);
             } else {
@@ -355,6 +372,14 @@ class CandidateController extends Controller
                 return response()->json($new_candidates);
             }
         }
+
+        ActivityLogger::log(
+            'update',
+            'candidate',
+            $candidate->id,
+            'Mengupdate data candidate untuk: ' . ($candidate->employee_id ?? $candidate->name)
+        );
+
         // Redirect back to the candidate page with a success message
         return response()->json(['success' => true, 'message' => 'Candidate updated successfully.']);
     }
@@ -437,36 +462,6 @@ class CandidateController extends Controller
                 ->get()
                 ->keyBy('id'); // supaya bisa akses cepat by id
 
-            /*
-            foreach ($candidates as $data) {
-                if (!isset($data['id'], $data['employee_id'])) {
-                    continue;
-                }
-
-                $candidate = $candidateModels->get($data['id']);
-                if (!$candidate || !$candidate->candidatepict || !$candidate->candidatepict->pict_name) {
-                    continue;
-                }
-
-                $oldPict = $candidate->candidatepict;
-                $extension = pathinfo($oldPict->pict_name, PATHINFO_EXTENSION);
-                $oldPath = $oldPict->pict_name;
-                $newPath = $data['employee_id'] . '.' . $extension;
-
-                if (Storage::disk('public')->exists($oldPath)) {
-                    // Hindari overwrite
-                    if (Storage::disk('public')->exists($newPath)) {
-                        $newPath = $data['employee_id'] . '_' . uniqid() . '.' . $extension;
-                    }
-
-                    DB::transaction(function () use ($oldPict, $oldPath, $newPath) {
-                        Storage::disk('public')->move($oldPath, $newPath);
-                        $oldPict->pict_name = basename($newPath);
-                        $oldPict->save();
-                    });
-                }
-            }
-            */
 
             //Update Foto Idcard
             foreach ($candidates as $data) {
@@ -476,11 +471,11 @@ class CandidateController extends Controller
                     ->join('candidatespict', 'candidates.id', '=', 'candidatespict.candidate_id')
                     ->select('candidatespict.pict_name')
                     ->where('candidates.id', $data['id']);
-                    
+
 
                 if ($check_join->count() > 0) {
 
-                    $oldPict = $check_join->first();                  
+                    $oldPict = $check_join->first();
                     // get file and rename file     
                     $oldPath = $oldPict->pict_name;
                     $file = Storage::get($oldPath);
@@ -495,7 +490,7 @@ class CandidateController extends Controller
 
                     //Update Database
                     CandidatePict::where('candidate_id', $data['id'])->update([
-                        'pict_name' => $data['employee_id']. '.' . $extension
+                        'pict_name' => $data['employee_id'] . '.' . $extension
                     ]);
                 } else {
                     continue;
@@ -507,6 +502,7 @@ class CandidateController extends Controller
                 'success' => true,
                 'message' => 'Employee IDs updated successfully.'
             ]);
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -528,6 +524,13 @@ class CandidateController extends Controller
                     $candidate->candidatepict->delete();
                 }
                 $candidate->delete();
+
+                ActivityLogger::log(
+                    'delete',
+                    'idcard',
+                    $candidate->id,
+                    'Menghapus NIK Kandidat: ' . $candidate->name
+                );
             }
         }
 
@@ -593,7 +596,8 @@ class CandidateController extends Controller
             Log::info('Mengirim batch kandidat ke Flask:', $validCandidates);
 
             // Kirim semua kandidat dalam satu request
-            $response = Http::post('http://10.10.100.193:5000/print', $validCandidates);
+            $flaskUrl = env('FLASK_PRINT_URL');
+            $response = Http::post($flaskUrl, $validCandidates);
 
             $responseData = $response->json();
 
@@ -602,11 +606,27 @@ class CandidateController extends Controller
                 'body' => $responseData
             ]);
 
-            //Update hanya kandidat yang berhasil dicetak
-            foreach ($responseData as $result) {
-                if (isset($result['employee_id']) && $result['status'] === 'success') {
-                    Candidate::where('employee_id', $result['employee_id'])
-                        ->update(['isPrinted' => 1]);
+            if (is_array($responseData)) {
+                foreach ($responseData as $result) {
+                    if (isset($result['employee_id']) && $result['status'] === 'success') {
+
+                        // Update flag isPrinted
+                        Candidate::where('employee_id', $result['employee_id'])
+                            ->update(['isPrinted' => 1]);
+
+                        // Ambil data kandidat untuk log
+                        $candidate = Candidate::where('employee_id', $result['employee_id'])->first();
+
+                        if ($candidate) {
+                            ActivityLogger::log(
+                                'print',
+                                'idcard',
+                                $candidate->id,
+                                'Mencetak ID Card untuk karyawan: ' .
+                                    ($candidate->employee_id . ' - ' . $candidate->name)
+                            );
+                        }
+                    }
                 }
             }
 
