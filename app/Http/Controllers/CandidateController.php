@@ -346,7 +346,7 @@ class CandidateController extends Controller
                     }
                     $get_foto = CandidatePict::where('candidate_id', $id);
                     if ($get_foto->count() > 0) {
-                        CandidatePict::where('pict_number', $pictNumber)->update([
+                        CandidatePict::where('candidate_id', $id)->update([
                             'pict_name' => $filename, // Simpan path file relatif
                         ]);
                     } else {
