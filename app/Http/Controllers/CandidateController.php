@@ -2,17 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\DB;
-use Illuminate\Http\Request;
+use App\Helpers\ActivityLogger;
 use App\Models\Candidate;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use App\Models\CandidatePict;
 use App\Models\IdCardTemplate;
-use Yajra\DataTables\DataTables;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Helpers\ActivityLogger;
+use Yajra\DataTables\DataTables;
 
 class CandidateController extends Controller
 {
@@ -22,25 +21,28 @@ class CandidateController extends Controller
         $candidates = Candidate::whereHas('candidatepict', function ($query) {
             $query->whereNotNull('pict_name');
         })->with('candidatepict')->get();
+
         return response()->json($candidates);
     }
 
     public function getNewCandidateDatatable()
     {
-        // Logic to retrieve candidate data
-        $candidates = Candidate::whereHas('candidatepict', function ($query) {
+        // Logic to retrieve candidate data - use query builder for server-side pagination
+        $query = Candidate::whereHas('candidatepict', function ($query) {
             $query->whereNull('pict_name');
-        })->with('candidatepict')->get();
-        return DataTables::of($candidates)->make(true);
+        })->with('candidatepict');
+
+        return DataTables::of($query)->make(true);
     }
 
     public function getCandidateDatatable()
     {
-        // Logic to retrieve candidate data
-        $candidates = Candidate::whereHas('candidatepict', function ($query) {
+        // Logic to retrieve candidate data - use query builder for server-side pagination
+        $query = Candidate::whereHas('candidatepict', function ($query) {
             $query->whereNotNull('pict_name');
-        })->where('isPrinted', 0)->with('candidatepict')->get();
-        return DataTables::of($candidates)->make(true);
+        })->where('isPrinted', 0)->with('candidatepict');
+
+        return DataTables::of($query)->make(true);
     }
 
     public function storecandidate(Request $request)
@@ -59,7 +61,7 @@ class CandidateController extends Controller
             // Add other validation rules as needed
         ]);
         // Store the candidate data in the database
-        $candidate = new Candidate();
+        $candidate = new Candidate;
         $candidate->name = $request->inputName;
         $candidate->birthplace = $request->inputBirthPlace;
         $candidate->job_level = $request->inputJobLevel;
@@ -70,7 +72,7 @@ class CandidateController extends Controller
 
         // If pict number is provided, store it in the database
         if ($request->has('inputPictNumber')) {
-            $candidatePict = new CandidatePict();
+            $candidatePict = new CandidatePict;
             $candidatePict->candidate_id = $candidate->id; // Assuming 'employee_id' is the foreign key
             $candidatePict->pict_number = $request->inputPictNumber;
             $candidatePict->save();
@@ -80,9 +82,8 @@ class CandidateController extends Controller
             'create',
             'idcard',
             $candidate->id,
-            'Menambah Data Kandidat: ' . $candidate->name
+            'Menambah Data Kandidat: '.$candidate->name
         );
-
 
         // Redirect back to the candidate page with a success message
         return redirect('/candidate/store')->with('success', 'Candidate added successfully.');
@@ -102,26 +103,41 @@ class CandidateController extends Controller
             $filePath = $file->storeAs('uploads', $file->getClientOriginalName(), 'public');
 
             // Get the full storage path
-            $realPath = storage_path('app/public/' . $filePath);
+            $realPath = storage_path('app/public/'.$filePath);
 
             // Load Excel data
             $data = Excel::toArray([], $realPath);
             $rows = $data[0]; // First sheet
 
+            // Pre-process rows to extract names for bulk duplicate check
+            $names = [];
+            foreach ($rows as $row) {
+                if (isset($row[1]) && strtolower(trim($row[1])) !== 'nama lengkap') {
+                    $names[] = $row[1];
+                }
+            }
+
+            // Fetch existing candidates with these names once to avoid N+1 queries
+            $existingCandidates = Candidate::whereIn('name', array_unique($names))
+                ->get()
+                ->groupBy('name');
+
             $insertedCount = 0;
 
             foreach ($rows as $index => $row) {
                 // Skip empty or header rows
-                if (!isset($row[1]) || strtolower(trim($row[1])) === 'nama lengkap') {
+                if (! isset($row[1]) || strtolower(trim($row[1])) === 'nama lengkap') {
                     continue;
                 }
 
+                $name = $row[1];
+
                 // Parse birthdate
                 try {
-                    if (isset($row[5]) && !empty($row[5])) {
+                    if (isset($row[5]) && ! empty($row[5])) {
                         $birthdate = is_numeric($row[5])
-                            ? \Carbon\Carbon::createFromDate(1900, 1, 1)->addDays($row[5] - 2)
-                            : \Carbon\Carbon::parse($row[5]);
+                            ? \Carbon\Carbon::createFromDate(1900, 1, 1)->addDays($row[5] - 2)->format('Y-m-d')
+                            : \Carbon\Carbon::parse($row[5])->format('Y-m-d');
                     } else {
                         $birthdate = null;
                     }
@@ -131,10 +147,10 @@ class CandidateController extends Controller
 
                 // Parse first working day
                 try {
-                    if (isset($row[6]) && !empty($row[6])) {
+                    if (isset($row[6]) && ! empty($row[6])) {
                         $firstWorkingDay = is_numeric($row[6])
-                            ? \Carbon\Carbon::createFromDate(1900, 1, 1)->addDays($row[6] - 2)
-                            : \Carbon\Carbon::parse($row[6]);
+                            ? \Carbon\Carbon::createFromDate(1900, 1, 1)->addDays($row[6] - 2)->format('Y-m-d')
+                            : \Carbon\Carbon::parse($row[6])->format('Y-m-d');
                     } else {
                         $firstWorkingDay = null;
                     }
@@ -142,18 +158,23 @@ class CandidateController extends Controller
                     $firstWorkingDay = null;
                 }
 
-                // Check for duplicates
-                $existingCandidate = Candidate::where('name', $row[1])
-                    ->where('birthdate', $birthdate)
-                    ->where('first_working_day', $firstWorkingDay)
-                    ->first();
+                // Check for duplicates in memory
+                $isDuplicate = false;
+                if ($existingCandidates->has($name)) {
+                    foreach ($existingCandidates->get($name) as $existing) {
+                        if ($existing->birthdate == $birthdate && $existing->first_working_day == $firstWorkingDay) {
+                            $isDuplicate = true;
+                            break;
+                        }
+                    }
+                }
 
-                if ($existingCandidate) {
+                if ($isDuplicate) {
                     continue;
                 }
 
                 // Create and populate candidate
-                $candidate = new Candidate();
+                $candidate = new Candidate;
                 $candidate->name = $row[1] ?? null;
                 $candidate->job_level = $row[2] ?? null;
                 $candidate->department = $row[3] ?? null;
@@ -164,13 +185,13 @@ class CandidateController extends Controller
 
                 // Optional: Save pict number if provided
                 if (isset($row[7]) && is_numeric($row[7])) {
-                    $candidatePict = new CandidatePict();
+                    $candidatePict = new CandidatePict;
                     $candidatePict->pict_number = $row[7];
                     $candidatePict->candidate_id = $candidate->id;
                     $candidate->candidatepict()->save($candidatePict);
                 } else {
                     // If no pict number is provided, pict_number is null
-                    $candidatePict = new CandidatePict();
+                    $candidatePict = new CandidatePict;
                     $candidatePict->pict_number = null;
                     $candidatePict->candidate_id = $candidate->id;
                     $candidate->candidatepict()->save($candidatePict);
@@ -181,7 +202,7 @@ class CandidateController extends Controller
 
             return redirect()->back()->with('success', "$insertedCount candidates imported successfully.");
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'An error occurred while processing the file: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'An error occurred while processing the file: '.$e->getMessage());
         }
     }
 
@@ -193,7 +214,7 @@ class CandidateController extends Controller
         if (empty($candidateIds)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Tidak ada kandidat yang dipilih.'
+                'message' => 'Tidak ada kandidat yang dipilih.',
             ], 400);
         }
 
@@ -208,7 +229,7 @@ class CandidateController extends Controller
         if ($candidates->isEmpty()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Data kandidat tidak ditemukan atau tidak memenuhi syarat export.'
+                'message' => 'Data kandidat tidak ditemukan atau tidak memenuhi syarat export.',
             ], 404);
         }
 
@@ -238,16 +259,19 @@ class CandidateController extends Controller
             ];
         }
 
-        $fileName = 'candidates_export_' . date('Ymd_His') . '.xlsx';
-        $filePath = 'exports/' . $fileName;
+        $fileName = 'candidates_export_'.date('Ymd_His').'.xlsx';
+        $filePath = 'exports/'.$fileName;
 
         // Define a simple export class on the fly
-        $export = new class($exportData) implements \Maatwebsite\Excel\Concerns\FromArray {
+        $export = new class($exportData) implements \Maatwebsite\Excel\Concerns\FromArray
+        {
             protected $data;
+
             public function __construct(array $data)
             {
                 $this->data = $data;
             }
+
             public function array(): array
             {
                 return $this->data;
@@ -264,14 +288,14 @@ class CandidateController extends Controller
         return response()->json([
             'success' => true,
             'file_url' => Storage::url($filePath),
-            'message' => 'Export berhasil.'
+            'message' => 'Export berhasil.',
         ]);
     }
-
 
     public function editcandidate($id)
     {
         $candidate = Candidate::findOrFail($id);
+
         return response()->json([
             'name' => $candidate->name,
             'employee_id' => $candidate->employee_id,
@@ -322,7 +346,6 @@ class CandidateController extends Controller
                 ->update(['pict_number' => $pictNumber]);
         }
 
-
         // If pict is provided, update it in database
         $dataUri = $request->imagePath;
         if ($dataUri) {
@@ -337,9 +360,9 @@ class CandidateController extends Controller
                 } else {
                     // Membuat nama file yang unik
                     $filename = $candidate->employee_id
-                        ? $candidate->employee_id . '.' . $type
-                        : 'pic_' . time() . '.' . $type;
-                    $filePath = public_path('storage/' . $filename); // Path untuk menyimpan file
+                        ? $candidate->employee_id.'.'.$type
+                        : 'pic_'.time().'.'.$type;
+                    $filePath = public_path('storage/'.$filename); // Path untuk menyimpan file
                     // Menyimpan gambar ke public/storage
                     if (file_put_contents($filePath, $data) === false) {
                         return response()->json(['message' => 'Gagal menyimpan gambar.'], 500);
@@ -362,13 +385,15 @@ class CandidateController extends Controller
                     'update',
                     'candidate',
                     $candidate->id,
-                    'Mengupdate data candidate (dengan foto) untuk: ' . ($candidate->employee_id ?? $candidate->name)
+                    'Mengupdate data candidate (dengan foto) untuk: '.($candidate->employee_id ?? $candidate->name)
                 );
 
                 $new_candidates = CandidatePict::get();
+
                 return response()->json($new_candidates);
             } else {
                 $new_candidates = CandidatePict::get();
+
                 return response()->json($new_candidates);
             }
         }
@@ -377,7 +402,7 @@ class CandidateController extends Controller
             'update',
             'candidate',
             $candidate->id,
-            'Mengupdate data candidate untuk: ' . ($candidate->employee_id ?? $candidate->name)
+            'Mengupdate data candidate untuk: '.($candidate->employee_id ?? $candidate->name)
         );
 
         // Redirect back to the candidate page with a success message
@@ -389,7 +414,7 @@ class CandidateController extends Controller
         // Validasi input tahun dan bulan
         $request->validate([
             'year' => 'required|digits:4',
-            'month' => 'required|digits_between:1,2'
+            'month' => 'required|digits_between:1,2',
         ]);
 
         $year = $request->year;
@@ -401,7 +426,7 @@ class CandidateController extends Controller
             ->max('employee_id');
 
         return response()->json([
-            'max_employee_id' => $maxID ?? 0
+            'max_employee_id' => $maxID ?? 0,
         ]);
     }
 
@@ -409,10 +434,10 @@ class CandidateController extends Controller
     {
         $candidates = $request->input('candidates');
 
-        if (!$candidates || !is_array($candidates)) {
+        if (! $candidates || ! is_array($candidates)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid candidate data.'
+                'message' => 'Invalid candidate data.',
             ]);
         }
 
@@ -422,7 +447,7 @@ class CandidateController extends Controller
             if (count($employeeIds) !== count(array_unique($employeeIds))) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Duplicate employee_id found in request data.'
+                    'message' => 'Duplicate employee_id found in request data.',
                 ], 422);
             }
 
@@ -435,11 +460,11 @@ class CandidateController extends Controller
                 ->pluck('employee_id')
                 ->toArray();
 
-            if (!empty($existing)) {
+            if (! empty($existing)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'One or more employee_id already exist in the database.',
-                    'duplicates' => $existing
+                    'duplicates' => $existing,
                 ], 422);
             }
 
@@ -447,7 +472,7 @@ class CandidateController extends Controller
             foreach ($candidates as $data) {
                 if (isset($data['id'], $data['employee_id'])) {
                     Candidate::where('id', $data['id'])->update([
-                        'employee_id' => $data['employee_id']
+                        'employee_id' => $data['employee_id'],
                     ]);
                 }
             }
@@ -462,51 +487,39 @@ class CandidateController extends Controller
                 ->get()
                 ->keyBy('id'); // supaya bisa akses cepat by id
 
-
-            //Update Foto Idcard
+            //Update Foto Idcard - optimized using already loaded $candidateModels to avoid N+1 queries
             foreach ($candidates as $data) {
+                $candidate = $candidateModels[$data['id']] ?? null;
 
-                // Check JOIN dulu ke candidatepict
-                $check_join = DB::table('candidates')
-                    ->join('candidatespict', 'candidates.id', '=', 'candidatespict.candidate_id')
-                    ->select('candidatespict.pict_name')
-                    ->where('candidates.id', $data['id']);
+                if ($candidate && $candidate->candidatepict && $candidate->candidatepict->pict_name) {
+                    $oldPath = $candidate->candidatepict->pict_name;
+                    $extension = pathinfo($oldPath, PATHINFO_EXTENSION);
+                    $newPath = $data['employee_id'].'.'.$extension;
 
+                    $oldFullPath = public_path('storage/'.$oldPath);
+                    $newFullPath = public_path('storage/'.$newPath);
 
-                if ($check_join->count() > 0) {
+                    if (file_exists($oldFullPath)) {
+                        rename($oldFullPath, $newFullPath);
 
-                    $oldPict = $check_join->first();
-                    // get file and rename file     
-                    $oldPath = $oldPict->pict_name;
-                    $file = Storage::get($oldPath);
-                    $extension = pathinfo($oldPict->pict_name, PATHINFO_EXTENSION);
-                    $oldPath = $oldPict->pict_name;
-                    $newPath = $data['employee_id'] . '.' . $extension;
-                    // rename file
-                    // Storage::disk('public')->move($oldPath, $newPath);
-                    rename(public_path('storage/' . $oldPath), public_path('storage/' . $newPath));
-
-
-
-                    //Update Database
-                    CandidatePict::where('candidate_id', $data['id'])->update([
-                        'pict_name' => $data['employee_id'] . '.' . $extension
-                    ]);
-                } else {
-                    continue;
+                        //Update Database
+                        $candidate->candidatepict->update([
+                            'pict_name' => $newPath,
+                        ]);
+                    }
                 }
             }
 
             // 5. Kembalikan response sukses
             return response()->json([
                 'success' => true,
-                'message' => 'Employee IDs updated successfully.'
+                'message' => 'Employee IDs updated successfully.',
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'An error occurred: ' . $e->getMessage()
+                'message' => 'An error occurred: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -529,7 +542,7 @@ class CandidateController extends Controller
                     'delete',
                     'idcard',
                     $candidate->id,
-                    'Menghapus NIK Kandidat: ' . $candidate->name
+                    'Menghapus NIK Kandidat: '.$candidate->name
                 );
             }
         }
@@ -556,12 +569,13 @@ class CandidateController extends Controller
                 ->where('employee_id', $candidateData['employee_id'])
                 ->first();
 
-            if (!$employee || !$employee->candidatepict) {
+            if (! $employee || ! $employee->candidatepict) {
                 $skipped[] = [
                     'employee_id' => $candidateData['employee_id'],
                     'status' => 'failed',
-                    'reason' => 'Employee or photo not found'
+                    'reason' => 'Employee or photo not found',
                 ];
+
                 continue;
             }
 
@@ -588,7 +602,7 @@ class CandidateController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Tidak ada kandidat valid.',
-                'skipped' => $skipped
+                'skipped' => $skipped,
             ], 400);
         }
 
@@ -603,7 +617,7 @@ class CandidateController extends Controller
 
             Log::info('Respons dari Flask:', [
                 'http_status' => $response->status(),
-                'body' => $responseData
+                'body' => $responseData,
             ]);
 
             if (is_array($responseData)) {
@@ -622,8 +636,8 @@ class CandidateController extends Controller
                                 'print',
                                 'idcard',
                                 $candidate->id,
-                                'Mencetak ID Card untuk karyawan: ' .
-                                    ($candidate->employee_id . ' - ' . $candidate->name)
+                                'Mencetak ID Card untuk karyawan: '.
+                                    ($candidate->employee_id.' - '.$candidate->name)
                             );
                         }
                     }
@@ -635,18 +649,18 @@ class CandidateController extends Controller
                 'generated_pdf' => $responseData[0]['combined_output'] ?? null,
                 'total_printed' => $responseData[0]['total_idcards'] ?? count($validCandidates),
                 'details' => $responseData,
-                'skipped' => $skipped
+                'skipped' => $skipped,
             ]);
         } catch (\Exception $e) {
             Log::error('Gagal mengirim ke Flask:', [
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
                 'message' => 'Terjadi kesalahan saat menghubungi server cetak.',
                 'error' => $e->getMessage(),
-                'skipped' => $skipped
+                'skipped' => $skipped,
             ], 500);
         }
     }

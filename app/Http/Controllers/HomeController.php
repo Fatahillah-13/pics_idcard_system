@@ -3,11 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Candidate;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\View;
 use App\Models\CandidatePict;
 use App\Models\Department;
 use App\Models\JobLevel;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\View;
 
 class HomeController extends Controller
 {
@@ -35,7 +35,8 @@ class HomeController extends Controller
     //     }
     // }
 
-    public function pictNumber(){
+    public function pictNumber()
+    {
         // Logic to get the latest pict number
         $latestPict = CandidatePict::orderBy('pict_number', 'desc')->first();
         $nextPictNumber = $latestPict ? $latestPict->pict_number + 1 : 1;
@@ -63,7 +64,7 @@ class HomeController extends Controller
                     'job_level' => $candidates->job_level,
                     'department' => $candidates->department,
                     'pict_number' => $candidates->candidatepict ? $candidates->candidatepict->pict_number : null,
-                ]
+                ],
             ];
         }));
     }
@@ -87,16 +88,17 @@ class HomeController extends Controller
                     'job_level' => $candidates->job_level,
                     'department' => $candidates->department,
                     'pict_number' => $candidates->candidatepict ? $candidates->candidatepict->pict_number : null,
-                ]
+                ],
             ];
         }));
     }
 
-    public function departmentChoices(Request $request){
+    public function departmentChoices(Request $request)
+    {
         // Logic to handle department choices
         $departments = Department::all();
 
-        return response()->json($departments->map(function ($department){
+        return response()->json($departments->map(function ($department) {
             return [
                 'label' => $department->department_name,
                 'value' => $department->department_name,
@@ -104,11 +106,12 @@ class HomeController extends Controller
         }));
     }
 
-    public function jobLevelChoices(Request $request){
+    public function jobLevelChoices(Request $request)
+    {
         // Logic to handle department choices
         $joblevels = JobLevel::all();
 
-        return response()->json($joblevels->map(function ($joblevel){
+        return response()->json($joblevels->map(function ($joblevel) {
             return [
                 'label' => $joblevel->level_name,
                 'value' => $joblevel->level_name,

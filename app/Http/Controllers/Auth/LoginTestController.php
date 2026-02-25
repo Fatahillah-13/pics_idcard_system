@@ -2,11 +2,8 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Http\Controllers\Controller;
-use App\Providers\RouteServiceProvider;
-use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use App\Helpers\ActivityLogger;
-use App\Http\Controllers\Auth\RedirectResponse;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -30,7 +27,6 @@ class LoginTestController extends Controller
             'email' => ['required', 'email'],
             'password' => ['required'],
         ]);
-
 
         if (Auth::attempt($credentials)) {
             // dd(1);

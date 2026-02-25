@@ -1,13 +1,14 @@
 <?php
 
 namespace App\Models;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Candidate extends Model
 {
-
     use HasFactory;
+
     // Nama tabel yang terkait dengan model ini
     protected $table = 'candidates';
 
@@ -21,7 +22,8 @@ class Candidate extends Model
         'birthdate',
         'first_working_day',
     ];
-    // Definisikan relasi satu ke satu  
+
+    // Definisikan relasi satu ke satu
     public function candidatepict()
     {
         return $this->hasOne(CandidatePict::class, 'candidate_id');

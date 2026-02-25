@@ -1,13 +1,13 @@
 <?php
 
+use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\Auth\LoginTestController;
 use App\Http\Controllers\CandidateController;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SettingsController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
-use App\Http\Controllers\ActivityLogController;
-use App\Http\Controllers\Auth\LoginTestController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,7 +20,6 @@ use App\Http\Controllers\Auth\LoginTestController;
 |
 */
 
-
 Auth::routes();
 
 Route::get('/login-test', function () {
@@ -30,7 +29,6 @@ Route::get('/login-test', function () {
 Route::get('/logout-test', [LoginTestController::class, 'logout'])->name('logout.auth.test');
 
 Route::post('/auth/login-test', [LoginTestController::class, 'authenticate'])->name('login.auth.test');
-
 
 // Define a group of routes with 'auth' middleware applied
 Route::middleware(['auth'])->group(function () {
@@ -109,6 +107,7 @@ Route::middleware(['auth'])->group(function () {
 
         if ($response->successful()) {
             $data = $response->json();
+
             return back()->with('success', "File berhasil disalin ({$data['copied']} disalin, {$data['skipped']} dilewati). Log: {$data['log_file']}");
         } else {
             return back()->with('error', 'Gagal menjalankan proses copy.');
