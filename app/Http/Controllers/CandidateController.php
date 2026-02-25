@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
-use Yajra\DataTables\DataTables;
+use Yajra\DataTables\Facades\DataTables;
 
 class CandidateController extends Controller
 {
@@ -40,7 +40,7 @@ class CandidateController extends Controller
         // Logic to retrieve candidate data - use query builder for server-side pagination
         $query = Candidate::whereHas('candidatepict', function ($query) {
             $query->whereNotNull('pict_name');
-        })->where('isPrinted', 0)->with('candidatepict');
+        })->where('is_printed', 0)->with('candidatepict');
 
         return DataTables::of($query)->make(true);
     }
@@ -119,8 +119,8 @@ class CandidateController extends Controller
 
             // Fetch existing candidates with these names once to avoid N+1 queries
             $existingCandidates = Candidate::whereIn('name', array_unique($names))
-                ->get()
-                ->groupBy('name');
+                ->get(['name', 'birthdate', 'first_working_day'])
+                ->groupBy(fn ($c) => mb_strtolower(trim($c->name)));
 
             $insertedCount = 0;
 
@@ -158,10 +158,11 @@ class CandidateController extends Controller
                     $firstWorkingDay = null;
                 }
 
-                // Check for duplicates in memory
+                // Check for duplicates in memory (case- and whitespace-insensitive by name)
                 $isDuplicate = false;
-                if ($existingCandidates->has($name)) {
-                    foreach ($existingCandidates->get($name) as $existing) {
+                $normalizedName = mb_strtolower(trim($name));
+                if ($existingCandidates->has($normalizedName)) {
+                    foreach ($existingCandidates->get($normalizedName) as $existing) {
                         if ($existing->birthdate == $birthdate && $existing->first_working_day == $firstWorkingDay) {
                             $isDuplicate = true;
                             break;
@@ -624,9 +625,9 @@ class CandidateController extends Controller
                 foreach ($responseData as $result) {
                     if (isset($result['employee_id']) && $result['status'] === 'success') {
 
-                        // Update flag isPrinted
+                        // Update flag is_printed
                         Candidate::where('employee_id', $result['employee_id'])
-                            ->update(['isPrinted' => 1]);
+                            ->update(['is_printed' => 1]);
 
                         // Ambil data kandidat untuk log
                         $candidate = Candidate::where('employee_id', $result['employee_id'])->first();
