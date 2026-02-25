@@ -32,7 +32,7 @@ class SettingsController extends Controller
         // Logic to retrieve candidate data - use query builder for server-side pagination
         $query = Candidate::whereHas('candidatepict', function ($query) {
             $query->whereNotNull('pict_name');
-        })->where('isPrinted', 1)->with('candidatepict');
+        })->where('is_printed', 1)->with('candidatepict');
 
         return DataTables::of($query)->make(true);
     }

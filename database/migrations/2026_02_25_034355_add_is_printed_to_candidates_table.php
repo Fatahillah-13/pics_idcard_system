@@ -12,9 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('candidates', function (Blueprint $table) {
-            if (! Schema::hasColumn('candidates', 'isPrinted')) {
-                $table->boolean('isPrinted')->default(false);
-                $table->index('isPrinted');
+            if (! Schema::hasColumn('candidates', 'is_printed')) {
+                $table->boolean('is_printed')->default(false);
+                $table->index('is_printed');
             }
         });
     }
@@ -25,8 +25,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('candidates', function (Blueprint $table) {
-            if (Schema::hasColumn('candidates', 'isPrinted')) {
-                $table->dropColumn('isPrinted');
+            if (Schema::hasColumn('candidates', 'is_printed')) {
+                $table->dropColumn('is_printed');
             }
         });
     }
