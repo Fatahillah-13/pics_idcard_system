@@ -2,13 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\IdCardTemplate;
-use App\Models\User;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use App\Models\Candidate;
 use App\Models\Department;
+use App\Models\IdCardTemplate;
 use App\Models\JobLevel;
+use App\Models\User;
+use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 
 class SettingsController extends Controller
@@ -17,6 +16,7 @@ class SettingsController extends Controller
     public function showGallery()
     {
         $templates = IdCardTemplate::latest()->get(); // Get all uploaded templates
+
         return view('settings.CardTemplates', compact('templates'));
     }
 
@@ -29,11 +29,12 @@ class SettingsController extends Controller
     // method to show employee
     public function printHistory()
     {
-        // Logic to retrieve candidate data
-        $candidates = Candidate::whereHas('candidatepict', function ($query) {
+        // Logic to retrieve candidate data - use query builder for server-side pagination
+        $query = Candidate::whereHas('candidatepict', function ($query) {
             $query->whereNotNull('pict_name');
-        })->where('isPrinted', 1)->with('candidatepict')->get();
-        return DataTables::of($candidates)->make(true);
+        })->where('is_printed', 1)->with('candidatepict');
+
+        return DataTables::of($query)->make(true);
     }
 
     // Method to Upload ID Card Template
@@ -51,9 +52,9 @@ class SettingsController extends Controller
         $file = $request->file('image_path');
         $filename = $file->getClientOriginalName();
         $file->storeAs('idCardTemplate', $filename, 'public');
-        $filePath = 'storage/idCardTemplate/' . $filename;
+        $filePath = 'storage/idCardTemplate/'.$filename;
 
-        $cardTemplate = new IdCardTemplate();
+        $cardTemplate = new IdCardTemplate;
         $cardTemplate->joblevel = json_encode($request->job_level);
         $cardTemplate->department = json_encode($request->department);
         $cardTemplate->ctpat = $request->ctpat;
@@ -68,6 +69,7 @@ class SettingsController extends Controller
     {
         $departments = \App\Models\Department::all();
         $joblevels = \App\Models\JobLevel::all();
+
         return view('settings.AddTemplate', compact('departments', 'joblevels'));
     }
 
@@ -116,14 +118,14 @@ class SettingsController extends Controller
             }
 
             $file = $request->file('image_path');
-            $filename = time() . '_' . $file->getClientOriginalName();
+            $filename = time().'_'.$file->getClientOriginalName();
             $file->storeAs('idCardTemplate', $filename, 'public');
-            $cardTemplate->image_path = 'storage/idCardTemplate/' . $filename;
+            $cardTemplate->image_path = 'storage/idCardTemplate/'.$filename;
         }
 
         $cardTemplate->save();
 
-        return response()->json(['success' => true,]);
+        return response()->json(['success' => true]);
     }
 
     // Method to Delete ID Card Template
@@ -135,6 +137,7 @@ class SettingsController extends Controller
             unlink($filePath); // Delete the file from storage
         }
         $cardTemplate->delete(); // Delete the record from the database
+
         return response()->json(['success' => true]);
     }
 
@@ -147,8 +150,10 @@ class SettingsController extends Controller
     // Method to Get Users Data
     public function getUsers()
     {
-        $users = User::latest()->get();
-        return datatables()->of($users)
+        // Use query builder for server-side pagination
+        $query = User::latest();
+
+        return datatables()->of($query)
             ->addColumn('action', function ($user) {
                 return view('settings.users', compact('user'));
             })
@@ -165,7 +170,7 @@ class SettingsController extends Controller
             'role' => 'required|integer',
         ]);
 
-        $user = new User();
+        $user = new User;
         $user->name = $request->name;
         $user->email = $request->email;
         $user->password = bcrypt($request->password);
@@ -179,6 +184,7 @@ class SettingsController extends Controller
     public function editUsers($id)
     {
         $user = User::findOrFail($id);
+
         return response()->json($user);
     }
 
@@ -187,7 +193,7 @@ class SettingsController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $id,
+            'email' => 'required|email|unique:users,email,'.$id,
             'role' => 'required|integer',
         ]);
 
@@ -208,6 +214,7 @@ class SettingsController extends Controller
     {
         $user = User::findOrFail($id);
         $user->delete();
+
         return response()->json(['success' => true]);
     }
 

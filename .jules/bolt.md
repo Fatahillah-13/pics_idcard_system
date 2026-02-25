@@ -1,0 +1,3 @@
+## 2025-02-25 - [DataTables & N+1 Optimizations]
+**Learning:** In Laravel apps using Yajra DataTables, the most common performance bottleneck is fetching the entire dataset into memory (Collection) before passing it to the DataTables helper. This bypasses the server-side pagination (LIMIT/OFFSET) features of the library. Additionally, bulk operations like Excel imports often suffer from N+1 query problems when checking for existing records.
+**Action:** Always prefer passing the Eloquent Query Builder directly to `DataTables::of()`. For bulk imports, fetch all relevant records in one query using `whereIn` before entering the processing loop.

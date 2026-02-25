@@ -1,8 +1,8 @@
 <?php
 
 namespace App\Models;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class CandidatePict extends Model
@@ -19,7 +19,7 @@ class CandidatePict extends Model
         'pict_name',
     ];
 
-    // Definisikan relasi banyak ke satu  
+    // Definisikan relasi banyak ke satu
     public function candidate()
     {
         return $this->belongsTo(Candidate::class, 'candidate_id');
