@@ -60,9 +60,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/joblevel/choices', [HomeController::class, 'jobLevelChoices']);
 
     // candidate routes
-    Route::get('/candidate/get', [CandidateController::class, 'getCandidate'])->name('candidate.get');
-    Route::get('/candidate/new', [CandidateController::class, 'getNewCandidateDatatable'])->name('candidate.new');
-    Route::get('/candidate', [CandidateController::class, 'getCandidateDatatable'])->name('candidate.index');
+    Route::get('/candidate/get', [HomeController::class, 'getCandidate'])->name('candidate.get');
+    Route::get('/candidate/new', [HomeController::class, 'getNewCandidateDatatable'])->name('candidate.new');
+    Route::get('/candidate', [HomeController::class, 'getCandidateDatatable'])->name('candidate.index');
     Route::post('/candidate/store', [CandidateController::class, 'storecandidate'])->name('candidate.store');
     Route::get('/candidate/max-employee-id', [CandidateController::class, 'getMaxEmployeeID'])->name('candidate.maxEmployeeID');
     Route::post('/candidate/update-employee-id', [CandidateController::class, 'updatecandidateNIK'])->name('candidate.updateEmployeeID');

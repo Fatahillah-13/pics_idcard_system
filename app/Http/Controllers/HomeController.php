@@ -7,34 +7,10 @@ use App\Models\CandidatePict;
 use App\Models\Department;
 use App\Models\JobLevel;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\View;
+use Yajra\DataTables\Facades\DataTables;
 
 class HomeController extends Controller
 {
-    // public function pageView($routeName, $page = null, $data = [])
-    // {
-    //     // Construct the view name based on the provided routeName and optional page parameter
-    //     $viewName = ($page) ? $routeName . '.' . $page : $routeName;
-
-    //     // Inject special logic for a AddCandidate view
-    //     if ($viewName === 'pics.AddCandidate') {
-    //         $latestPict = CandidatePict::orderBy('pict_number', 'desc')->first();
-    //         $nextPictNumber = $latestPict ? $latestPict->pict_number + 1 : 1;
-
-    //         $data['latestPict'] = $latestPict;
-    //         $data['nextPictNumber'] = $nextPictNumber;
-    //     }
-
-    //     // Check if the constructed view exists
-    //     if (View::exists($viewName)) {
-    //         // If the view exists, return the view
-    //         return view($viewName, $data);
-    //     } else {
-    //         // If the view doesn't exist, return a 404 error
-    //         abort(404);
-    //     }
-    // }
-
     public function pictNumber()
     {
         // Logic to get the latest pict number
@@ -117,5 +93,35 @@ class HomeController extends Controller
                 'value' => $joblevel->level_name,
             ];
         }));
+    }
+
+    public function getCandidate()
+    {
+        // Logic to retrieve candidate data
+        $candidates = Candidate::whereHas('candidatepict', function ($query) {
+            $query->whereNotNull('pict_name');
+        })->with('candidatepict')->get();
+
+        return response()->json($candidates);
+    }
+
+    public function getNewCandidateDatatable()
+    {
+        // Logic to retrieve candidate data - use query builder for server-side pagination
+        $query = Candidate::whereHas('candidatepict', function ($query) {
+            $query->whereNull('pict_name');
+        })->with('candidatepict');
+
+        return DataTables::of($query)->make(true);
+    }
+
+    public function getCandidateDatatable()
+    {
+        // Logic to retrieve candidate data - use query builder for server-side pagination
+        $query = Candidate::whereHas('candidatepict', function ($query) {
+            $query->whereNotNull('pict_name');
+        })->where('isPrinted', 0)->with('candidatepict');
+
+        return DataTables::of($query)->make(true);
     }
 }

@@ -15,35 +15,35 @@ use Yajra\DataTables\Facades\DataTables;
 
 class CandidateController extends Controller
 {
-    public function getCandidate()
-    {
-        // Logic to retrieve candidate data
-        $candidates = Candidate::whereHas('candidatepict', function ($query) {
-            $query->whereNotNull('pict_name');
-        })->with('candidatepict')->get();
+    // public function getCandidate()
+    // {
+    //     // Logic to retrieve candidate data
+    //     $candidates = Candidate::whereHas('candidatepict', function ($query) {
+    //         $query->whereNotNull('pict_name');
+    //     })->with('candidatepict')->get();
 
-        return response()->json($candidates);
-    }
+    //     return response()->json($candidates);
+    // }
 
-    public function getNewCandidateDatatable()
-    {
-        // Logic to retrieve candidate data - use query builder for server-side pagination
-        $query = Candidate::whereHas('candidatepict', function ($query) {
-            $query->whereNull('pict_name');
-        })->with('candidatepict');
+    // public function getNewCandidateDatatable()
+    // {
+    //     // Logic to retrieve candidate data - use query builder for server-side pagination
+    //     $query = Candidate::whereHas('candidatepict', function ($query) {
+    //         $query->whereNull('pict_name');
+    //     })->with('candidatepict');
 
-        return DataTables::of($query)->make(true);
-    }
+    //     return DataTables::of($query)->make(true);
+    // }
 
-    public function getCandidateDatatable()
-    {
-        // Logic to retrieve candidate data - use query builder for server-side pagination
-        $query = Candidate::whereHas('candidatepict', function ($query) {
-            $query->whereNotNull('pict_name');
-        })->where('is_printed', 0)->with('candidatepict');
+    // public function getCandidateDatatable()
+    // {
+    //     // Logic to retrieve candidate data - use query builder for server-side pagination
+    //     $query = Candidate::whereHas('candidatepict', function ($query) {
+    //         $query->whereNotNull('pict_name');
+    //     })->where('isPrinted', 0)->with('candidatepict');
 
-        return DataTables::of($query)->make(true);
-    }
+    //     return DataTables::of($query)->make(true);
+    // }
 
     public function storecandidate(Request $request)
     {
@@ -625,9 +625,9 @@ class CandidateController extends Controller
                 foreach ($responseData as $result) {
                     if (isset($result['employee_id']) && $result['status'] === 'success') {
 
-                        // Update flag is_printed
+                        // Update flag isPrinted
                         Candidate::where('employee_id', $result['employee_id'])
-                            ->update(['is_printed' => 1]);
+                            ->update(['isPrinted' => 1]);
 
                         // Ambil data kandidat untuk log
                         $candidate = Candidate::where('employee_id', $result['employee_id'])->first();

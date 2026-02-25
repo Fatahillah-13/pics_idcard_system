@@ -30,13 +30,6 @@
                         </form>
                     </div>
                 </li>
-                <li class="pc-h-item d-none d-md-inline-flex">
-                    <form class="form-search">
-                        <i class="ph-duotone ph-magnifying-glass icon-search"></i>
-                        <input type="search" class="form-control" placeholder="Search..." />
-                        <button class="btn btn-search" style="padding: 0"><kbd>ctrl+k</kbd></button>
-                    </form>
-                </li>
             </ul>
         </div>
         <!-- [Mobile Media Block end] -->
@@ -62,12 +55,12 @@
                         </a>
                     </div>
                 </li>
-                <li class="pc-h-item">
+                {{-- <li class="pc-h-item">
                     <a class="pc-head-link pct-c-btn" href="#" data-bs-toggle="offcanvas"
                         data-bs-target="#offcanvas_pc_layout">
                         <i class="ph-duotone ph-gear-six"></i>
                     </a>
-                </li>
+                </li> --}}
                 <li class="dropdown pc-h-item header-user-profile">
                     <a class="pc-head-link dropdown-toggle arrow-none me-0" data-bs-toggle="dropdown" href="#"
                         role="button" aria-haspopup="false" data-bs-auto-close="outside" aria-expanded="false">
