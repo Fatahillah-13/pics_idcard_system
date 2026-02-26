@@ -100,7 +100,26 @@ class CandidateController extends Controller
         try {
             // Handle the uploaded file
             $file = $request->file('importFile');
-            $filePath = $file->storeAs('uploads', $file->getClientOriginalName(), 'public');
+            // Determine a safe extension based on the MIME type, ignoring the client-supplied extension
+            $mimeType = $file->getMimeType();
+            switch ($mimeType) {
+                case 'text/csv':
+                case 'text/plain':
+                    $safeExtension = 'csv';
+                    break;
+                case 'application/vnd.ms-excel':
+                    $safeExtension = 'xls';
+                    break;
+                case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+                default:
+                    // Default to .xlsx for any other validated spreadsheet MIME type
+                    $safeExtension = 'xlsx';
+                    break;
+            }
+
+            // Use a safe, generated filename with a whitelisted extension
+            $filename = time().'_'.uniqid().'.'.$safeExtension;
+            $filePath = $file->storeAs('uploads', $filename, 'public');
 
             // Get the full storage path
             $realPath = storage_path('app/public/'.$filePath);
@@ -319,7 +338,8 @@ class CandidateController extends Controller
 
         // Logic to update candidate data
         $request->validate([
-            'employee_id' => 'nullable|string|max:255',
+            // Use alpha_dash to prevent path traversal in employee_id
+            'employee_id' => 'nullable|string|alpha_dash|max:255',
             'name' => 'nullable|string|max:255',
             'birthPlace' => 'nullable|string|max:255',
             'birthDate' => 'nullable|date',
@@ -433,14 +453,14 @@ class CandidateController extends Controller
 
     public function updatecandidateNIK(Request $request)
     {
-        $candidates = $request->input('candidates');
+        // Added validation for candidates array and employee_id format to prevent path traversal
+        $request->validate([
+            'candidates' => 'required|array',
+            'candidates.*.id' => 'required|exists:candidates,id',
+            'candidates.*.employee_id' => 'required|string|alpha_dash|max:255',
+        ]);
 
-        if (! $candidates || ! is_array($candidates)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid candidate data.',
-            ]);
-        }
+        $candidates = $request->input('candidates');
 
         try {
             // 1. Cek duplikasi employee_id di data input
@@ -495,12 +515,29 @@ class CandidateController extends Controller
                 if ($candidate && $candidate->candidatepict && $candidate->candidatepict->pict_name) {
                     $oldPath = $candidate->candidatepict->pict_name;
                     $extension = pathinfo($oldPath, PATHINFO_EXTENSION);
-                    $newPath = $data['employee_id'].'.'.$extension;
+                    // Use basename to prevent path traversal even if alpha_dash fails
+                    $safeEmployeeId = basename($data['employee_id']);
+                    $newPath = $safeEmployeeId.'.'.$extension;
 
                     $oldFullPath = public_path('storage/'.$oldPath);
                     $newFullPath = public_path('storage/'.$newPath);
 
-                    if (file_exists($oldFullPath)) {
+                    // Ensure the new path is still within the storage directory
+                    $realStoragePath = realpath(public_path('storage'));
+                    $newDir = dirname($newFullPath);
+                    if (! is_dir($newDir)) {
+                        if (! mkdir($newDir, 0755, true) && ! is_dir($newDir)) {
+                            Log::error('Failed to create directory for candidate pict rename.', [
+                                'directory' => $newDir,
+                                'candidate_id' => $candidate->id ?? null,
+                                'employee_id' => $data['employee_id'] ?? null,
+                            ]);
+                            continue;
+                        }
+                    }
+                    $realNewDir = realpath($newDir);
+
+                    if (file_exists($oldFullPath) && $realNewDir && $realStoragePath && str_starts_with($realNewDir, $realStoragePath)) {
                         rename($oldFullPath, $newFullPath);
 
                         //Update Database
