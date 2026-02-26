@@ -50,8 +50,14 @@ class SettingsController extends Controller
         ]);
 
         $file = $request->file('image_path');
-        // Use a safe, generated filename instead of getClientOriginalName() to prevent path traversal
-        $filename = time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
+        // Use a safe, generated filename and derive the extension from the MIME type, not from client input
+        $mimeType = $file->getMimeType();
+        $extensionMap = [
+            'image/jpeg' => 'jpg',
+            'image/png'  => 'png',
+        ];
+        $safeExtension = $extensionMap[$mimeType] ?? 'jpg';
+        $filename = time().'_'.uniqid().'.'.$safeExtension;
         $file->storeAs('idCardTemplate', $filename, 'public');
         $filePath = 'storage/idCardTemplate/'.$filename;
 
@@ -119,8 +125,17 @@ class SettingsController extends Controller
             }
 
             $file = $request->file('image_path');
-            // Use a safe, generated filename instead of getClientOriginalName() to prevent path traversal
-            $filename = time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
+            // Determine a safe file extension based on the server-detected MIME type,
+            // rather than trusting the client-provided original extension.
+            $mimeType = $file->getMimeType();
+            $extensionMap = [
+                'image/jpeg' => 'jpg',
+                'image/png'  => 'png',
+            ];
+            $extension = $extensionMap[$mimeType] ?? 'jpg';
+
+            // Use a safe, generated filename with a controlled extension
+            $filename = time().'_'.uniqid().'.'.$extension;
             $file->storeAs('idCardTemplate', $filename, 'public');
             $cardTemplate->image_path = 'storage/idCardTemplate/'.$filename;
         }
