@@ -100,8 +100,25 @@ class CandidateController extends Controller
         try {
             // Handle the uploaded file
             $file = $request->file('importFile');
-            // Use a safe, generated filename instead of getClientOriginalName() to prevent path traversal
-            $filename = time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
+            // Determine a safe extension based on the MIME type, ignoring the client-supplied extension
+            $mimeType = $file->getMimeType();
+            switch ($mimeType) {
+                case 'text/csv':
+                case 'text/plain':
+                    $safeExtension = 'csv';
+                    break;
+                case 'application/vnd.ms-excel':
+                    $safeExtension = 'xls';
+                    break;
+                case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+                default:
+                    // Default to .xlsx for any other validated spreadsheet MIME type
+                    $safeExtension = 'xlsx';
+                    break;
+            }
+
+            // Use a safe, generated filename with a whitelisted extension
+            $filename = time().'_'.uniqid().'.'.$safeExtension;
             $filePath = $file->storeAs('uploads', $filename, 'public');
 
             // Get the full storage path
@@ -508,8 +525,15 @@ class CandidateController extends Controller
                     // Ensure the new path is still within the storage directory
                     $realStoragePath = realpath(public_path('storage'));
                     $newDir = dirname($newFullPath);
-                    if (! file_exists($newDir)) {
-                        @mkdir($newDir, 0755, true);
+                    if (! is_dir($newDir)) {
+                        if (! mkdir($newDir, 0755, true) && ! is_dir($newDir)) {
+                            Log::error('Failed to create directory for candidate pict rename.', [
+                                'directory' => $newDir,
+                                'candidate_id' => $candidate->id ?? null,
+                                'employee_id' => $data['employee_id'] ?? null,
+                            ]);
+                            continue;
+                        }
                     }
                     $realNewDir = realpath($newDir);
 
