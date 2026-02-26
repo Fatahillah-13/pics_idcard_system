@@ -50,7 +50,8 @@ class SettingsController extends Controller
         ]);
 
         $file = $request->file('image_path');
-        $filename = $file->getClientOriginalName();
+        // Use a safe, generated filename instead of getClientOriginalName() to prevent path traversal
+        $filename = time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
         $file->storeAs('idCardTemplate', $filename, 'public');
         $filePath = 'storage/idCardTemplate/'.$filename;
 
@@ -118,7 +119,8 @@ class SettingsController extends Controller
             }
 
             $file = $request->file('image_path');
-            $filename = time().'_'.$file->getClientOriginalName();
+            // Use a safe, generated filename instead of getClientOriginalName() to prevent path traversal
+            $filename = time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
             $file->storeAs('idCardTemplate', $filename, 'public');
             $cardTemplate->image_path = 'storage/idCardTemplate/'.$filename;
         }

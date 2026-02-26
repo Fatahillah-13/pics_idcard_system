@@ -1,4 +1,5 @@
 <?php
+
 $ds = DIRECTORY_SEPARATOR;  //1
 $storeFolder = 'uploads';   //2
 if (! empty($_FILES['file']) && isset($_FILES['file']['tmp_name']) && isset($_FILES['file']['error']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
